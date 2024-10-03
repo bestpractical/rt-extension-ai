@@ -1,0 +1,17 @@
+INSTALLATION
+    Set your rt path
+        export RTHOME=/home/npatel/rt-6.0/rt
+
+    perl Makefile.PL
+    make initdb
+    make install
+
+    Edit your RT_SiteConfig.pm
+        Add this line:
+
+            Plugin('RT::Extension::AI');
+
+    Clear your mason cache
+            rm -rf var/mason_data/obj
+
+    Restart your webserver
