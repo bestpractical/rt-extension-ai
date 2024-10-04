@@ -6,6 +6,19 @@ push @CustomFields, {
     LookupType  => 'RT::Queue-RT::Ticket',
 };
 
+my $i = 0;
+push @CustomFields, {
+    LookupType  => 'RT::Queue-RT::Ticket',  # for Tickets
+    Name        => 'Ticket Sentiment',
+    Type        => 'SelectSingle',  # SelectSingle is the same as: Type => 'Select', MaxValues => 1
+    RenderType  => 'Dropdown',
+    Values      => [
+        { Name => 'Dissatisfied', Description => '', SortOrder => $i++ },
+        { Name => 'Neutral',  Description => '',  SortOrder => $i++ },
+        { Name => 'Satisfied',  Description => '',  SortOrder => $i++ },
+    ],
+};
+
 @ScripConditions = (
     {
         Name                 => 'On comment and On Corrsopond',
@@ -20,6 +33,11 @@ push @CustomFields, {
         Description => 'set field value of summarization of ticket',
         ExecModule => 'AddTicketSummary',
     },
+    {
+        Name        => 'Add ticket setiment analysis',
+        Description => 'set field value of sentimental analysis of reply text',
+        ExecModule => 'AddTicketSentiment',
+    },
 );
 
 @Scrips = (
@@ -27,6 +45,12 @@ push @CustomFields, {
         Description    => 'If someone comment or reply then add summary (from initialdata 2)',
         ScripCondition => 'On comment and On Corrsopond',
         ScripAction    => 'Add ticket summarization',
+        Template       => 'Blank'
+    },
+    {
+        Description    => 'Add Sentiment on reply of the team member (from initialdata)',
+        ScripCondition => 'On Correspond',
+        ScripAction    => 'Add ticket setiment analysis',
         Template       => 'Blank'
     },
 );
