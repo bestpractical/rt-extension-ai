@@ -1,5 +1,11 @@
 # Add new conditions, actions, scrips to RT
 
+push @CustomFields, {
+    Name        => 'Ticket Summary',
+    Type        => 'Text',
+    LookupType  => 'RT::Queue-RT::Ticket',
+};
+
 @ScripConditions = (
     {
         Name                 => 'On comment and On Corrsopond',

@@ -1,5 +1,7 @@
 package RT::Action::AddTicketSummary;
 
+use RT;
+use RT::Config;
 use strict;
 use warnings;
 use base qw(RT::Action);
@@ -18,8 +20,11 @@ sub Prepare {
 
 sub Commit {
 	my $self = shift;
-	my $api_key = 'Your API KEY';
-	my $url = 'https://api.openai.com/v1/chat/completions';
+	RT->LoadConfig;
+	my $config = RT->Config;
+
+	my $api_key = $config->Get('OpenAI_ApiKey');
+	my $url = $config->Get('OpenAI_ApiUrl');
 	my $ticket_id = $self->TicketObj->id;
 	my $ticket_transactions = $self->TicketObj->Transactions;
 	my $conversation_input = '';
