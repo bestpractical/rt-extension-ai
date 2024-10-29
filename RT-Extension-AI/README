@@ -2,6 +2,12 @@ INSTALLATION
     Set your rt path
         export RTHOME=/path/to/rt/
 
+    * Before running the following commands, do: *
+        rm -rf inc
+        sudo apt-get install libmodule-install-perl
+        sudo cpan Install::Module
+        sudo cpan Install::Module:RTx
+
     perl Makefile.PL
     make initdb
     make install
