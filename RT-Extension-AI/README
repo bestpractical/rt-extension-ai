@@ -6,7 +6,7 @@ INSTALLATION
         rm -rf inc
         sudo apt-get install libmodule-install-perl
         sudo cpan Install::Module
-        sudo cpan Install::Module:RTx
+        sudo cpan Install::Module::RTx
 
     perl Makefile.PL
     make initdb
