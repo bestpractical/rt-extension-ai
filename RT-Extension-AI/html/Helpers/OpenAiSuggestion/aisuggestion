@@ -27,6 +27,10 @@ my $aisuggestion = $config->Get('AiSuggestion');
 my $translate = $config->Get('Translate');
 my $autocomplete = $config->Get('Autocomplete');
 
+my $GeneralAIModel = $config->Get('GeneralAIModel')->{modelDetails};
+my $AutoCompleteModel = $config->Get('AutoCompleteModel')->{modelDetails};
+my ($modelName, $temperature, $maxToken, $stream, $prompt);
+
 RT::Logger->info("Received rawText: $rawText, callType: $callType");
 
 # Abort if OpenAI API key is missing
@@ -46,7 +50,6 @@ my %ai_prompt = (
 
 # Check the option type and construct the prompt
 my $prefix = 'Give me response for the prompt as HTML with only paragraph tag : ';
-my $prompt;
 
 if (defined $transFrom && $transFrom ne '' && defined $transTo && $transTo ne '') {
     $ai_prompt{translate} .= $transFrom . ' to ' . $transTo;
@@ -56,10 +59,19 @@ if (defined $transFrom && $transFrom ne '' && defined $transTo && $transTo ne ''
 
 if ($option_type eq 'autocomplete') {
     $prompt = $ai_prompt{$option_type} || $ai_prompt{'aisuggestion'};
+    $modelName = $AutoCompleteModel->{modelName};
+    $temperature = $AutoCompleteModel->{temperature};
+    $maxToken = $AutoCompleteModel->{maxToken};
+    $stream = $AutoCompleteModel->{stream};
 } else {
     $prompt = $prefix . ($ai_prompt{$option_type} || $ai_prompt{'aisuggestion'});
+    $modelName = $GeneralAIModel->{modelName};
+    $temperature = $GeneralAIModel->{temperature};
+    $maxToken = $GeneralAIModel->{maxToken};
+    $stream = $GeneralAIModel->{stream};
 }
 RT::Logger->info("Using AI prompt: $prompt");
+RT::Logger->info(" ******* Using AI variables: $prompt, $modelName, $temperature, $maxToken");
 
 # Prepare the OpenAI API request
 my $ua = LWP::UserAgent->new;
@@ -71,13 +83,13 @@ my $request = HTTP::Request->new(
         'Authorization' => "Bearer $openai_api_key"
     ],
     encode_json({
-        model => 'gpt-4',  # Model version
+        model => $modelName,  # Model version
         messages => [
             { role => 'system', content => $prompt },
             { role => 'user', content => $input_text }
         ],
-        max_tokens => 300,  # Set max tokens
-        temperature => 0.5  # Temperature for creativity control
+        max_tokens => $maxToken,  # Set max tokens
+        temperature => $temperature  # Temperature for creativity control
     })
 );
 
