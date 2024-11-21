@@ -6,51 +6,51 @@ push @CustomFields, {
     LookupType  => 'RT::Queue-RT::Ticket',
 };
 
-my $i = 0;
 push @CustomFields, {
-    LookupType  => 'RT::Queue-RT::Ticket',  # for Tickets
+    LookupType  => 'RT::Queue-RT::Ticket',
     Name        => 'Ticket Sentiment',
-    Type        => 'SelectSingle',  # SelectSingle is the same as: Type => 'Select', MaxValues => 1
+    Type        => 'SelectSingle',
     RenderType  => 'Dropdown',
     Values      => [
-        { Name => 'Dissatisfied', Description => '', SortOrder => $i++ },
-        { Name => 'Neutral',  Description => '',  SortOrder => $i++ },
-        { Name => 'Satisfied',  Description => '',  SortOrder => $i++ },
+        { Name => 'Dissatisfied', Description => '', SortOrder => 1 },
+        { Name => 'Neutral',  Description => '',  SortOrder => 2 },
+        { Name => 'Satisfied',  Description => '',  SortOrder => 3 },
     ],
 };
 
 @ScripConditions = (
     {
-        Name                 => 'On comment and On Corrsopond',
-        Description          => 'When someone reply or comment on ticket',
-        ExecModule           => 'Conversations',
+        Name                 => 'Trigger On comment and On Correspond',
+        Description          => 'From extension: When someone reply or comment on ticket',
+        ApplicableTransTypes => 'Correspond,Comment',
+        ExecModule	         => 'Conversations'
     },
 );
 
 @ScripActions = (
     {
-        Name        => 'Add ticket summarization',
-        Description => 'set field value of summarization of ticket',
-        ExecModule => 'AddTicketSummary',
+        Name        => 'Generate automatic ticket summarization',
+        Description => 'From extension: set field value of summarization of ticket',
+        ExecModule  => 'AddTicketSummary',
     },
     {
-        Name        => 'Add ticket setiment analysis',
-        Description => 'set field value of sentimental analysis of reply text',
-        ExecModule => 'AddTicketSentiment',
+        Name        => 'Generate automatic ticket setiment analysis',
+        Description => 'From extension: set field value of sentimental analysis of reply text',
+        ExecModule  => 'AddTicketSentiment',
     },
 );
 
 @Scrips = (
     {
-        Description    => 'If someone comment or reply then add summary (from initialdata 2)',
-        ScripCondition => 'On comment and On Corrsopond',
-        ScripAction    => 'Add ticket summarization',
+        Description    => 'From extension: If someone comment or reply then add summary',
+        ScripCondition => 'Trigger On comment and On Correspond',
+        ScripAction    => 'Generate automatic ticket summarization',
         Template       => 'Blank'
     },
     {
-        Description    => 'Add Sentiment on reply of the team member (from initialdata)',
+        Description    => 'From extension: Add Sentiment on reply of the team member',
         ScripCondition => 'On Correspond',
-        ScripAction    => 'Add ticket setiment analysis',
+        ScripAction    => 'Generate automatic ticket setiment analysis',
         Template       => 'Blank'
     },
 );

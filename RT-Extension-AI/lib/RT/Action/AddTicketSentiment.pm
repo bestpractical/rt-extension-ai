@@ -31,6 +31,7 @@ sub Commit {
 	my $ticket_id = $self->TicketObj->id;
 	my $ticket_transactions = $self->TicketObj->Transactions;
 	my $conversation_input = '';
+	my $sentiment_prompt = $config->Get('TicketSentiment');
 
 	while (my $transaction = $ticket_transactions->Next) {
 		my $content = $transaction->Content;
@@ -59,7 +60,7 @@ sub Commit {
 		"model" => "gpt-4",
 		"messages" => [{
 			"role" => "system",
-			"content" => "You are a sentiment analysis assistant. Based on the conversation, classify the overall sentiment into one of the following categories: Satisfied, Dissatisfied, or Neutral."
+			"content" => $sentiment_prompt
 		}, {
 			"role" => "user",
 			"content" => $conversation_input
@@ -82,16 +83,16 @@ sub Commit {
 
 
 			my $normalized_sentiment;
-			if ($sentiment =~ /satisfied/i) {
-				$normalized_sentiment = 'Satisfied';
-			} elsif ($sentiment =~ /dissatisfied/i) {
+			if ($sentiment =~ /dissatisfied/i) {
 				$normalized_sentiment = 'Dissatisfied';
+			} elsif ($sentiment =~ /satisfied/i) {
+				$normalized_sentiment = 'Satisfied';
 			} else {
 				$normalized_sentiment = 'Neutral';
 			}
 
 
-			$RT::Logger->info("Generated sentiment for ticket #$ticket_id: $normalized_sentiment");
+			$RT::Logger->info("From Extension: Generated sentiment for ticket #$ticket_id: $normalized_sentiment");
 			$self->TicketObj->AddCustomFieldValue(
 				Field => 'Ticket Sentiment',  # The custom field for storing sentiment
 				Value => $normalized_sentiment

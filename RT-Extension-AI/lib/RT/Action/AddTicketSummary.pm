@@ -28,6 +28,7 @@ sub Commit {
 	my $ticket_id = $self->TicketObj->id;
 	my $ticket_transactions = $self->TicketObj->Transactions;
 	my $conversation_input = '';
+	my $summary_prompt = $config->Get('TicketSummary');
 
 
 	while (my $transaction = $ticket_transactions->Next) {
@@ -46,7 +47,7 @@ sub Commit {
 	    }
 	}
 
-	RT::Logger->info("Ticket conversation history: " . $conversation_input);
+	RT::Logger->info("From Extension: Ticket conversation history: " . $conversation_input);
 
 
 	unless ($conversation_input) {
@@ -65,7 +66,7 @@ sub Commit {
 	    "model" => "gpt-4",
 	    "messages" => [{
 	        "role" => "system",
-	        "content" => "You are a helpdesk assistant. Summarize the following ticket conversation between a user and the staff in a precise manner. Ensure the summary is clear and concise, and focuses on the core points of the discussion."
+	        "content" => $summary_prompt
 	    }, {
 	        "role" => "user",
 	        "content" => $conversation_input

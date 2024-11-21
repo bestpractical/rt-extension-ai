@@ -1,11 +1,12 @@
-Set($HuggingFace_SentimentApiUrl, 'https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment');
-Set($HuggingFace_SummaryApiUrl, 'https://api-inference.huggingface.co/models/facebook/bart-large-cnn');
-Set($HuggingFace_ApiKey, "API");
 Set($OpenAI_ApiUrl, "https://api.openai.com/v1/chat/completions");
 Set($OpenAI_ApiKey, "Your open AI API Key");
+
+Set($TicketSummary, "You are a helpdesk assistant. Summarize the following ticket conversation between a user and the staff in a precise manner. Ensure the summary is clear and concise, and focuses on the core points of the discussion.");
+Set($TicketSentiment, "You are a sentiment analysis assistant. Based on the conversation, classify the overall sentiment into one of the following categories: Satisfied, Dissatisfied, or Neutral.");
 Set($AdjustTone, "You are a language expert. Your task is to paraphrase the following text to improve clarity, tone, and readability, while maintaining the original meaning. Ensure that the paraphrased version is more concise, professional, and customer-friendly.");
 Set($AiSuggestion, "You are a knowledgeable assistant. Based on the following question or scenario, provide clear and concise suggestions or answers. Make sure to consider different perspectives and provide practical advice that is easy to understand.");
 Set($Translate, "You are a highly skilled translator. Your task is to translate the following text from Spanish to English. Ensure that the translation maintains the original meaning and is idiomatic in the target language.");
+Set($Autocomplete, "For the given text predict next three words.");
 
 Set(
     %MessageBoxRichTextInitArguments,
