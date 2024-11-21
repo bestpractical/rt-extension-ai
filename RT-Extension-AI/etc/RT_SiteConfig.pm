@@ -5,7 +5,7 @@ Set($TicketSummary, "You are a helpdesk assistant. Summarize the following ticke
 Set($TicketSentiment, "You are a sentiment analysis assistant. Based on the conversation, classify the overall sentiment into one of the following categories: Satisfied, Dissatisfied, or Neutral.");
 Set($AdjustTone, "You are a language expert. Your task is to paraphrase the following text to improve clarity, tone, and readability, while maintaining the original meaning. Ensure that the paraphrased version is more concise, professional, and customer-friendly.");
 Set($AiSuggestion, "You are a knowledgeable assistant. Based on the following question or scenario, provide clear and concise suggestions or answers. Make sure to consider different perspectives and provide practical advice that is easy to understand.");
-Set($Translate, "You are a highly skilled translator. Your task is to translate the following text from Spanish to English. Ensure that the translation maintains the original meaning and is idiomatic in the target language.");
+Set($Translate, "You are a highly skilled translator. Ensure that the translation maintains the original meaning and is idiomatic in the target language. Your task is to translate the following text from .");
 Set($Autocomplete, "For the given text predict next three words.");
 
 Set(

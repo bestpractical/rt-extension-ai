@@ -1,27 +1,68 @@
 % if ( $error ) {
   <& /Elements/ModalError, Message => $error &>
 % } else {
+<style>
+/* Overlay styling */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8); /* Light background with transparency */
+  backdrop-filter: blur(5px); /* Background blur */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Ensure it overlays other elements */
+  padding-top: 40%;
+  padding-left: 40%;
+}
+
+/* Spinner styling */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+</style>
   <div class="modal-dialog modal-dialog-centered w-40" role="document" style="z-index: 999; width: 30vw">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">AI Popup</h5>
+        <h5 class="modal-title"><% $popupLabel || 'AI Popup' %></h5>
         <button id="cancelButton" class="close" style="background: none; color: inherit; border: none; padding: 0; cursor: pointer; outline: inherit;" aria-label="Close">
           <span aria-hidden="true" style="font-size: 30px; line-height: 1;">&times;</span>
         </button>
       </div>
       <div class="modal-body">
+       <!-- Overlay with Loading Spinner -->
+      <div id="loadingSpinner" class="overlay" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only"></span>
+        </div>
+      </div>
         <form id="FormWithTextAreas">
+
+
+        <div class="form-group" id="translateFromElem" style="display: none;">
+                <label for="translateFrom">Translate From</label>
+                <input type="text" class="form-control" id="translateFrom" name="translateFrom" placeholder="e.g., English">
+        </div>
 
           <!-- Text Area 1 -->
           <div class="form-group">
             <label for="textArea1">You can edit your text here.</label>
-            <textarea style="height: 10vw;" class="form-control" id="textArea1" name="textArea1" rows="3"><% $rawText || 'no data' %></textarea>
+            <textarea style="height: 10vw;" class="form-control" id="textArea1" name="textArea1" rows="3"><% $rawText || '' %></textarea>
           </div>
+
+	<div class="form-group" id="translateToElem" style="display: none;">
+                    <label for="translateTo">Translate To</label>
+                    <input type="text" class="form-control" id="translateTo" name="translateTo" placeholder="e.g., Spanish">
+        </div>
 
           <!-- Text Area 2 -->
           <div class="form-group">
             <label for="textArea2">AI Response</label>
-            <textarea class="form-control" style="height: 15vw;" id="textArea2" name="textArea2" rows="3"></textarea>
+            <textarea class="form-control" style="height: 15vw;" id="textArea2" name="textArea2" rows="3" readonly></textarea>
           </div>
 
           <!-- Buttons Section -->
@@ -49,4 +90,5 @@ my $search;
 </%init>
 <%args>
 $rawText => ''
+$popupLabel => ''
 </%args>

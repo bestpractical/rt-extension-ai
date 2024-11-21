@@ -6,6 +6,8 @@
 <%ARGS>
 $rawText => ''  # Corresponds to input text from the user
 $callType => '' # Corresponds to the type of call (aisuggestion, adjustTone, translate, autocomplete etc.)
+$transFrom => ''
+$transTo => ''
 </%ARGS>
 
 <%INIT>
@@ -36,14 +38,27 @@ my $option_type = $callType || 'aisuggestion';  # Type of suggestion (aisuggesti
 
 # Define prompt templates for different option types
 my %ai_prompt = (
-    adjustTone => $adjustTone,
+    adjustTone   => $adjustTone,
     aisuggestion => $aisuggestion,
-    translate => $translate,
+    translate    => $translate,
     autocomplete => $autocomplete
 );
 
-# If the call type is not valid, default to 'aisuggestion'
-my $prompt = $ai_prompt{$option_type} || $ai_prompt{'aisuggestion'};
+# Check the option type and construct the prompt
+my $prefix = 'Give me response for the prompt as HTML with only paragraph tag : ';
+my $prompt;
+
+if (defined $transFrom && $transFrom ne '' && defined $transTo && $transTo ne '') {
+    $ai_prompt{translate} .= $transFrom . ' to ' . $transTo;
+} else {
+    $ai_prompt{translate} .= 'English' . ' to ' . 'Spanish';
+}
+
+if ($option_type eq 'autocomplete') {
+    $prompt = $ai_prompt{$option_type} || $ai_prompt{'aisuggestion'};
+} else {
+    $prompt = $prefix . ($ai_prompt{$option_type} || $ai_prompt{'aisuggestion'});
+}
 RT::Logger->info("Using AI prompt: $prompt");
 
 # Prepare the OpenAI API request
