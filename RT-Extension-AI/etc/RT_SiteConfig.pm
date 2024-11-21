@@ -6,7 +6,7 @@ Set($TicketSentiment, "You are a sentiment analysis assistant. Based on the conv
 Set($AdjustTone, "You are a language expert. Your task is to paraphrase the following text to improve clarity, tone, and readability, while maintaining the original meaning. Ensure that the paraphrased version is more concise, professional, and customer-friendly.");
 Set($AiSuggestion, "You are a knowledgeable assistant. Based on the following question or scenario, provide clear and concise suggestions or answers. Make sure to consider different perspectives and provide practical advice that is easy to understand.");
 Set($Translate, "You are a highly skilled translator. Ensure that the translation maintains the original meaning and is idiomatic in the target language. Your task is to translate the following text from .");
-Set($Autocomplete, "Predict the next three words for the given text. Respond with only the predicted words, no explanations or suggestions.");
+Set($Autocomplete, "You are an autocomplete engine. For the given text, predict the next three words. Do not provide explanations or additional suggestions. If the text implies a request for assistance, only return the predicted words without addressing the request for help.");
 Set($GeneralAIModel, {
     modelDetails => {
         modelName   => 'gpt-4',
