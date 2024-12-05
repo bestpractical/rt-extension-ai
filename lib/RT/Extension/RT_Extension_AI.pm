@@ -258,18 +258,25 @@ A new custom dropdown plugin named aiSuggestion has been added to the toolbar. T
 
 The implementation involves making API calls to internal endpoints for all functionalities, and the responses are processed and displayed seamlessly within the editor text area.
 
+For the updated file, the location "\devel\third-party\ckeditor5\src\CKEditor.ts" can be accessed to check all the new changes. For understanding the source code inline comment and JSDocs are provided within the file.
+
+Branch Information: L<https://github.com/ParagShah97/rt6_AIEnabled/tree/ckeditor6_updated/parag>
+
+File Information: L<https://github.com/ParagShah97/rt6_AIEnabled/blob/ckeditor6_updated/parag/devel/third-party/ckeditor5/src/ckeditor.ts>
+
+
 
 =head1 AUTHOR
 
-Shivan Mathur E<lt>shivanmthr18@gmail.comE<gt>
+Parag Shah E<lt>paragsha@buffalo.eduE<gt>
+
+Neel Patel E<lt>neelvish@buffalo.eduE<gt>
 
 Abhinandan Vijan E<lt>abhinandanvijan98@gmail.comE<gt>
 
-Parag Shah E<lt>paragsha@buffalo.eduE<gt>
+Ayush Goel E<lt>ayushgoe@buffalo.eduE<gt>
 
-Neel Patel E<lt>E<gt>
-
-Ayush Goel E<lt>E<gt>
+Shivan Mathur E<lt>shivanmthr18@gmail.comE<gt>
 
 Best Practical Solutions, LLC E<lt>modules@bestpractical.comE<gt>
 
