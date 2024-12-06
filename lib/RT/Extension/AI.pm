@@ -1,14 +1,14 @@
 use strict;
 use warnings;
 
-# package RT::Extension::RT-Extension-AI;
+# package RT::Extension::RT-Extension-AI; 
 package RT::Extension::AI;
 
 our $VERSION = '0.01';
 
 =head1 NAME
 
-RT-Extension-AI - AI Features for Request Tracker
+RT-Extension-AI - AI Features for Request Tracker extension
 
 =head1 DESCRIPTION
 
