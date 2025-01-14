@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 
-# package RT::Extension::RT-Extension-AI; 
 package RT::Extension::AI;
 
 our $VERSION = '0.01';
@@ -46,7 +45,6 @@ Automatically generates ticket summaries based on the ticket conversation betwee
 =back
 
 =cut
-
 
 =head1 RT VERSION
 

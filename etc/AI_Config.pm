@@ -1,0 +1,87 @@
+Set( $OpenAI_ApiUrl, "https://api.openai.com/v1/chat/completions" );
+Set( $OpenAI_ApiKey, $ENV{'OPENAI_API_KEY'} || 'Your open AI API Key' );
+
+Set( $TicketSummary,
+    "You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required."
+   );
+Set( $TicketSentiment,
+    "Classify the overall sentiment as Satisfied, Dissatisfied, or Neutral. Provide reasoning if possible."
+   );
+Set( $AdjustTone,
+    "Paraphrase the text for clarity and professionalism. Ensure the tone is polite, concise, and customer-friendly."
+   );
+Set( $AiSuggestion,
+    "Provide clear, practical advice or suggestions based on the given question or scenario."
+   );
+Set( $Translate,
+    "Translate the text from {source_language} to {target_language}, maintaining accuracy and idiomatic expressions."
+   );
+Set( $Autocomplete,
+    "Predict the next three words based on the input text without explanations."
+   );
+
+Set($GeneralAIModel,
+    {   modelDetails => {
+            modelName   => 'gpt-4',
+            maxToken    => 300,
+            temperature => 0.5,
+            stream      => \0
+        }
+    }
+   );
+
+Set($AutoCompleteModel,
+    {   modelDetails => {
+            modelName   => 'gpt-3.5-turbo',
+            maxToken    => 20,
+            temperature => 0.7,
+            stream      => \1
+        }
+    }
+   );
+
+Set(%MessageBoxRichTextInitArguments,
+    toolbar => {
+        items => [
+            'undo',         'redo',
+            '|',            'heading',
+            'fontfamily',   'fontsize',
+            '|',            'bold',
+            'italic',       'strikethrough',
+            '|',            'link',
+            '|',            'bulletedList',
+            'numberedList', '|',
+            'insertTable',  '|',
+            'blockQuote',   '|',
+            'code',         'sourceEditing',
+            '|',            'aiSuggestion'
+        ],
+    },
+    mediaEmbed => {
+        removeProviders =>
+            [ 'instagram', 'twitter', 'googleMaps', 'flickr', 'facebook' ],
+        previewsInData => 1,
+    },
+    language => 'en',
+    image    => {
+        toolbar => [
+            'imageTextAlternative', 'toggleImageCaption',
+            'imageStyle:inline',    'imageStyle:block',
+            'imageStyle:side',
+        ],
+    },
+    table => {
+        contentToolbar => [ 'tableColumn', 'tableRow', 'mergeTableCells' ],
+    },
+    ui       => { poweredBy => undef, },
+    fontSize => {
+        options => [
+            { title => 'Tiny',  model => '9px' },
+            { title => 'Small', model => '11px' },
+            'default',
+            { title => 'Big',  model => '15px' },
+            { title => 'Huge', model => '17px' }
+        ],
+        supportAllValues => 1,
+    },
+   );
