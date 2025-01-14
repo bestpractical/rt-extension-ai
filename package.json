@@ -1,0 +1,17 @@
+{
+  "name": "rt-extension-ai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "ckeditor5": "^44.1.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7"
+  },
+  "author": "Best Practical Solutions, LLC",
+  "license": "GPL"
+}

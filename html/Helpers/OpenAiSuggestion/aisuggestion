@@ -1,11 +1,7 @@
-% my $abort = 1;  # Declare and set $abort
-% my @suggestions;  # Declare @suggestions
-% $r->content_type('application/json; charset=utf-8') if $abort;
-% $m->abort if $abort;
-<% JSON( \@suggestions ) |n %>
+% $r->content_type('application/json; charset=utf-8');
 <%ARGS>
-$rawText => ''  # Corresponds to input text from the user
-$callType => '' # Corresponds to the type of call (aisuggestion, adjustTone, translate, autocomplete etc.)
+$rawText => ''
+$callType => ''
 $transFrom => ''
 $transTo => ''
 </%ARGS>
@@ -17,96 +13,78 @@ use HTTP::Request;
 use LWP::UserAgent;
 use JSON;
 
+# Load RT Config
 RT->LoadConfig;
 my $config = RT->Config;
 
+# Retrieve OpenAI API configurations
 my $openai_api_key = $config->Get('OpenAI_ApiKey');
 my $api_url = $config->Get('OpenAI_ApiUrl');
-my $adjustTone = $config->Get('AdjustTone');
-my $aisuggestion = $config->Get('AiSuggestion');
-my $translate = $config->Get('Translate');
-my $autocomplete = $config->Get('Autocomplete');
+my $prompts = {
+    adjustTone   => $config->Get('AdjustTone'),
+    aisuggestion => $config->Get('AiSuggestion'),
+    translate    => $config->Get('Translate'),
+    autocomplete => $config->Get('Autocomplete'),
+};
 
-my $GeneralAIModel = $config->Get('GeneralAIModel')->{modelDetails};
-my $AutoCompleteModel = $config->Get('AutoCompleteModel')->{modelDetails};
-my ($modelName, $temperature, $maxToken, $stream, $prompt);
+# Retrieve model configurations
+my $general_model    = $config->Get('GeneralAIModel')->{modelDetails};
+my $autocomplete_model = $config->Get('AutoCompleteModel')->{modelDetails};
 
-RT::Logger->info("Received rawText: $rawText, callType: $callType");
+RT->Logger->info("Received AI request: rawText = '$rawText', callType = '$callType', transFrom = '$transFrom', transTo = '$transTo'");
 
-# Abort if OpenAI API key is missing
-$m->abort("Missing OpenAI API key") unless $openai_api_key && $openai_api_key ne $api_url;
-
-# Retrieve parameters from the request (from the template ARGS)
-my $input_text = $rawText || '';  # Input text from the user
-my $option_type = $callType || 'aisuggestion';  # Type of suggestion (aisuggestion, adjustTone, etc.)
-
-# Define prompt templates for different option types
-my %ai_prompt = (
-    adjustTone   => $adjustTone,
-    aisuggestion => $aisuggestion,
-    translate    => $translate,
-    autocomplete => $autocomplete
-);
-
-# Check the option type and construct the prompt
-my $prefix = 'Give me response for the prompt as HTML with only paragraph tag : ';
-
-if (defined $transFrom && $transFrom ne '' && defined $transTo && $transTo ne '') {
-    $ai_prompt{translate} .= $transFrom . ' to ' . $transTo;
-} else {
-    $ai_prompt{translate} .= 'English' . ' to ' . 'Spanish';
+unless ($openai_api_key && $api_url) {
+    $m->abort("Missing OpenAI API key or URL");
 }
 
-if ($option_type eq 'autocomplete') {
-    $prompt = $ai_prompt{$option_type} || $ai_prompt{'aisuggestion'};
-    $modelName = $AutoCompleteModel->{modelName};
-    $temperature = $AutoCompleteModel->{temperature};
-    $maxToken = $AutoCompleteModel->{maxToken};
-    $stream = $AutoCompleteModel->{stream};
-} else {
-    $prompt = $prefix . ($ai_prompt{$option_type} || $ai_prompt{'aisuggestion'});
-    $modelName = $GeneralAIModel->{modelName};
-    $temperature = $GeneralAIModel->{temperature};
-    $maxToken = $GeneralAIModel->{maxToken};
-    $stream = $GeneralAIModel->{stream};
-}
-RT::Logger->info("Using AI prompt: $prompt");
-RT::Logger->info(" ******* Using AI variables: $prompt, $modelName, $temperature, $maxToken");
+my $prompt_type = $callType || 'aisuggestion';
+my $prompt = $prompts->{$prompt_type} || $prompts->{aisuggestion};
 
-# Prepare the OpenAI API request
+if ($prompt_type eq 'translate') {
+    my $from_lang = $transFrom || 'English';
+    my $to_lang = $transTo || 'Spanish';
+    $prompt .= " from $from_lang to $to_lang";
+}
+
+my $prompt_prefix = 'Give me response for the prompt as HTML with only paragraph tags: ';
+$prompt = $prompt_prefix . $prompt;
+
+my $model_config = $prompt_type eq 'autocomplete' ? $autocomplete_model : $general_model;
+
 my $ua = LWP::UserAgent->new;
 my $request = HTTP::Request->new(
     'POST',
     $api_url,
     [
         'Content-Type'  => 'application/json',
-        'Authorization' => "Bearer $openai_api_key"
+        'Authorization' => "Bearer $openai_api_key",
     ],
     encode_json({
-        model => $modelName,  # Model version
-        messages => [
+        model       => $model_config->{modelName},
+        messages    => [
             { role => 'system', content => $prompt },
-            { role => 'user', content => $input_text }
+            { role => 'user', content => $rawText },
         ],
-        max_tokens => $maxToken,  # Set max tokens
-        temperature => $temperature  # Temperature for creativity control
+        max_tokens  => $model_config->{maxToken},
+        temperature => $model_config->{temperature},
     })
 );
 
-# Send the request to OpenAI API and handle the response
 my $response = $ua->request($request);
-my $suggestion = '';
+my $output;
 
 if ($response->is_success) {
-    my $content = eval { decode_json($response->content) };  # Safely decode JSON
+    my $content = eval { decode_json($response->decoded_content) };
     if ($@) {
-        $m->abort("Failed to decode JSON: $@");
+        $m->abort("Failed to decode JSON response: $@");
     }
-    $suggestion = $content->{choices}[0]{message}{content} || 'No suggestion available';
+
+    $output = $content->{choices}[0]{message}{content} || 'No suggestion available';
 } else {
+    RT->Logger->error("OpenAI API error: " . $response->status_line);
     $m->abort("Error calling OpenAI API: " . $response->status_line);
 }
 
-# Return the suggestion as JSON
-print encode_json({ suggestion => $suggestion });
+print encode_json({ suggestion => $output });
+
 </%INIT>
