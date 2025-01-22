@@ -23,7 +23,7 @@ push @CustomFields, {
         Name                 => 'Trigger On comment and On Correspond',
         Description          => 'From extension: When someone reply or comment on ticket',
         ApplicableTransTypes => 'Correspond,Comment',
-        ExecModule	         => 'Conversations'
+        ExecModule	         => 'AnyTransaction'
     },
 );
 

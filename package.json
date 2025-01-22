@@ -10,6 +10,7 @@
     "ckeditor5": "^44.1.0"
   },
   "devDependencies": {
+    "prettier-plugin-tailwindcss": "^0.6.10",
     "vite": "^6.0.7"
   },
   "author": "Best Practical Solutions, LLC",

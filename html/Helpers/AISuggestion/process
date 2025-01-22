@@ -1,0 +1,52 @@
+<%ARGS>
+$rawText       => ''
+$callType      => 'autocomplete'
+$translateFrom => ''
+$translateTo   => ''
+$provider      => 'OpenAI'
+</%ARGS>
+
+<%INIT>
+use Try::Tiny;
+use JSON;
+use RT::Extension::AI::Utils;
+use RT::Extension::AI::Providers::Factory;
+
+# Initialize the response
+my $response;
+
+try {
+    # Load provider configuration
+    my $config = RT::Extension::AI::Utils->get_provider_config($provider);
+    unless ($config) {
+        die "Configuration for provider '$provider' not found.";
+    }
+
+    my $prompt = RT->Config->Get(ucfirst($callType));
+
+    # Append translation details if applicable
+    if ($callType eq 'translate') {
+        my $from_lang = $translateFrom || 'English';
+        my $to_lang   = $translateTo   || 'Spanish';
+        $prompt .= " Translate from $from_lang to $to_lang.";
+    }
+
+    # Choose model configuration
+    my $model_config = $config->{models}->{$callType} || $config->{models}->{general};
+
+    # Call the AI provider
+    my $provider_instance = RT::Extension::AI::Providers::Factory->get_provider($provider, $config);
+
+    $response = $provider_instance->process_request(
+        prompt       => $prompt,
+        raw_text     => $rawText,
+        model_config => $model_config,
+    );
+} catch {
+    RT::Logger->error("Failed to process AI request: $_");
+    $response = "Error: Unable to process the request.";
+};
+
+$m->out($response);
+$m->abort();
+</%INIT>

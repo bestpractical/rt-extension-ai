@@ -1,6 +1,3 @@
-Set( $OpenAI_ApiUrl, "https://api.openai.com/v1/chat/completions" );
-Set( $OpenAI_ApiKey, $ENV{'OPENAI_API_KEY'} || 'Your open AI API Key' );
-
 Set( $TicketSummary,
     "You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required."
    );
@@ -40,48 +37,22 @@ Set($AutoCompleteModel,
     }
    );
 
-Set(%MessageBoxRichTextInitArguments,
-    toolbar => {
-        items => [
-            'undo',         'redo',
-            '|',            'heading',
-            'fontfamily',   'fontsize',
-            '|',            'bold',
-            'italic',       'strikethrough',
-            '|',            'link',
-            '|',            'bulletedList',
-            'numberedList', '|',
-            'insertTable',  '|',
-            'blockQuote',   '|',
-            'code',         'sourceEditing',
-            '|',            'aiSuggestion'
-        ],
-    },
-    mediaEmbed => {
-        removeProviders =>
-            [ 'instagram', 'twitter', 'googleMaps', 'flickr', 'facebook' ],
-        previewsInData => 1,
-    },
-    language => 'en',
-    image    => {
-        toolbar => [
-            'imageTextAlternative', 'toggleImageCaption',
-            'imageStyle:inline',    'imageStyle:block',
-            'imageStyle:side',
-        ],
-    },
-    table => {
-        contentToolbar => [ 'tableColumn', 'tableRow', 'mergeTableCells' ],
-    },
-    ui       => { poweredBy => undef, },
-    fontSize => {
-        options => [
-            { title => 'Tiny',  model => '9px' },
-            { title => 'Small', model => '11px' },
-            'default',
-            { title => 'Big',  model => '15px' },
-            { title => 'Huge', model => '17px' }
-        ],
-        supportAllValues => 1,
-    },
-   );
+Set(%AIProviders,
+    'OpenAI' => {
+        api_key => 'API KEY',
+        timeout => 15,
+        url     => 'https://api.openai.com/v1/chat/completions'
+    }
+);
+
+my $messageBoxRichTextInitArguments = RT->Config->Get('MessageBoxRichTextInitArguments');
+
+$messageBoxRichTextInitArguments->{extraPlugins} //= [];
+push @{$messageBoxRichTextInitArguments->{extraPlugins}}, 'RtExtensionAi';
+
+
+# Add 'aiSuggestion' to the toolbar, creating a new array
+$messageBoxRichTextInitArguments->{toolbar} //= [];
+$messageBoxRichTextInitArguments->{toolbar} = [
+    @{$messageBoxRichTextInitArguments->{toolbar}}, 'aiSuggestion'
+];

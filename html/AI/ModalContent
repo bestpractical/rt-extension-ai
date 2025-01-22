@@ -1,0 +1,31 @@
+<div class="modal" id="aiModal" tabindex="-1" role="dialog" aria-labelledby="aiModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><% $title %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <%perl>
+          if ($callType eq 'translate') {
+              $m->comp('/AI/TranslateForm', rawText => $rawText, transFrom => $transFrom, transTo => $transTo);
+          } elsif ($callType eq 'adjustTone') {
+              $m->comp('/AI/AdjustToneForm', rawText => $rawText, callType => $callType);
+          } else {
+              $m->comp('/AI/SuggestionForm', rawText => $rawText, callType => $callType);
+          }
+        </%perl>
+      </div>
+    </div>
+  </div>
+</div>
+<%INIT>
+
+</%INIT>
+<%ARGS>
+$title          => ''
+$rawText        => ''
+$callType       => ''
+$transFrom      => ''
+$transTo        => ''
+</%ARGS>

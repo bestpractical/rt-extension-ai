@@ -5,6 +5,9 @@ package RT::Extension::AI;
 
 our $VERSION = '0.01';
 
+RT->AddJavaScript('rt-extension-ai.js');
+RT->AddStyleSheets('rt-extension-ai.css');
+
 =head1 NAME
 
 RT-Extension-AI - AI Features for Request Tracker extension
@@ -137,68 +140,17 @@ This section outlines the configuration steps to enable the AI functionalities i
 
     We added a custom plugin 'aiSuggestion' to the Ckeditor default configuration.
 
-    Set(
-        %MessageBoxRichTextInitArguments,
-        toolbar => {
-            items => [
-                'undo',                'redo',        '|',           'heading',
-                '|',                   'fontfamily',  'fontsize',    'fontColor',
-                'fontBackgroundColor', '|',           'bold',        'italic',
-                'strikethrough',       'subscript',   'superscript', '|',
-                'link',                'imageUpload', 'mediaEmbed',  '|',
-                'code',                'blockQuote',  'codeBlock',   '|',
-                'insertTable',         'alignment',   '|',           'bulletedList',
-                'numberedList',        '|',           'outdent',
-                'indent',              '|',           'sourceEditing', 'aiSuggestion'
-            ],
-        },
-        mediaEmbed => {
-            removeProviders => [ 'instagram', 'twitter', 'googleMaps', 'flickr', 'facebook' ],
-            previewsInData  => 1,
-        },
-        language => 'en',
-        image    => {
-            toolbar => [
-                'imageTextAlternative', 'toggleImageCaption', 'imageStyle:inline', 'imageStyle:block',
-                'imageStyle:side',
-            ],
-        },
-        table => {
-            contentToolbar => [ 'tableColumn', 'tableRow', 'mergeTableCells', ],
-        },
-        ui => {
-            poweredBy => {
-                position         => 'border',
-                side             => 'right',
-                label            => undef,
-                verticalOffset   => 5,
-                horizontalOffset => 5,
-            },
-        },
-        fontSize => {
-            options => [
-                {
-                    title => 'Tiny',
-                    model => '9px'
-                },
-                {
-                    title => 'Small',
-                    model => '11px'
-                },
-                'default',
-                {
-                    title => 'Big',
-                    model => '15px'
-                },
-                {
-                    title => 'Huge',
-                    model => '17px'
-                }
-            ],
-            supportAllValues => 1,
-        },
-    ); 
+    my $messageBoxRichTextInitArguments = RT->Config->Get('MessageBoxRichTextInitArguments');
 
+    $messageBoxRichTextInitArguments->{extraPlugins} //= [];
+    push @{$messageBoxRichTextInitArguments->{extraPlugins}}, 'RtExtensionAi';
+
+
+    # Add 'aiSuggestion' to the toolbar, creating a new array
+    $messageBoxRichTextInitArguments->{toolbar}{items} //= [];
+    $messageBoxRichTextInitArguments->{toolbar}{items} = [
+        @{$messageBoxRichTextInitArguments->{toolbar}{items}}, 'aiSuggestion'
+    ];
 
 
 =head1 RT Scrips and Custom Fields
@@ -223,47 +175,37 @@ Automatically update the 'Ticket Sentiment' field when user updates on ticket.
 
 This extension adds two ticket custom fields: C<Ticket Sentiment> and C<Ticket Summary>.
 
-=head2 AIModal
+=head2 RtExtensionAi
 
-AIModal File:
+A new custom plugin RtExtensionAi was created to handle the AI suggestions and other AI-related features.
+This plugin is integrated with CKEditor to provide a seamless user experience.
 
-URL: /helper/OpenAiSuggestion/aiModal
-This internal endpoint returns the HTML required to render the AI popup, which supports features such as AI Suggestions, Adjust Tone, and AI Translate.
+To enable the plugin, add the following line to your RT_SiteConfig.pm file:
 
-Request Body:
-
-$rawText: Text content from CKEditor (either the selected portion or the entire text).
-$popupLabel: The heading to display on the popup.
-
-=head2 AISuggestion
-
-AISuggestion File:
-
-URL: /helper/OpenAiSuggestion/aisuggestion
-This internal endpoint processes AI suggestions, tone adjustments, and translation requests. It leverages OpenAI endpoints internally, with the responses displayed in the AI popup.
-
-The AISuggestion functionality depends on a configuration file for the OpenAI base URL, API key, and model settings.
-
-Request Body:
-
-$rawText: Input text from the user.
-$callType: Specifies the type of request (e.g., aisuggestion, adjustTone, translate, autocomplete, etc.).
-$transFrom: Source language for translation.
-$transTo: Target language for translation.
-
-=head2 CkEditor.ts
-
-A new custom dropdown plugin named aiSuggestion has been added to the toolbar. This plugin includes dropdown options for features such as AI Suggestion, Adjust Tone, and Translat. Additionally, AI-powered autocomplete functionality has been implemented for the CKEditor text area.
-
-The implementation involves making API calls to internal endpoints for all functionalities, and the responses are processed and displayed seamlessly within the editor text area.
-
-For the updated file, the location "\devel\third-party\ckeditor5\src\CKEditor.ts" can be accessed to check all the new changes. For understanding the source code inline comment and JSDocs are provided within the file.
-
-Branch Information: L<https://github.com/ParagShah97/rt6_AIEnabled/tree/ckeditor6_updated/parag>
-
-File Information: L<https://github.com/ParagShah97/rt6_AIEnabled/blob/ckeditor6_updated/parag/devel/third-party/ckeditor5/src/ckeditor.ts>
+    Set($MessageBoxRichTextInitArguments, {
+        extraPlugins => ['RtExtensionAi'],
+        toolbar => {
+            items => [ ... 'aiSuggestion' ]
+        }
+    });
 
 
+=item Updating the plugin
+
+The plugin uses Vite to build the assets. Information on working with CKEditor plugins can be 
+found on their website, a good place to start is here:
+
+L<https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html>
+
+
+=item Building the plugin
+
+To build the plugin, run the following command:
+
+    =item C<npm install>
+    =item C<npm run build>
+
+=back
 
 =head1 AUTHOR
 
