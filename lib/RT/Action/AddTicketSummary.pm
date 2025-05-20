@@ -5,8 +5,8 @@ use strict;
 use warnings;
 use base qw(RT::Action);
 
-use HTTP::Request::Common;
-use LWP::UserAgent;
+use RT::Extension::AI::Providers::Factory;
+use Encode;
 use JSON;
 
 sub Prepare {
@@ -14,92 +14,64 @@ sub Prepare {
 }
 
 sub Commit {
-    my $self = shift;
+    my $self      = shift;
+    my $ticket    = $self->TicketObj;
+    my $ticket_id = $ticket->id;
 
-    my $api_key = $ENV{'OPENAI_API_KEY'} || RT->Config->Get('OpenAI_ApiKey');
-    my $url     = RT->Config->Get('OpenAI_ApiUrl');
-    my $summary_prompt = RT->Config->Get('TicketSummary');
+    my $provider_name = $self->Argument || RT->Config->Get('DefaultProvider');
+    my $model_key     = 'GeneralAIModel';
+    my $model_config  = RT->Config->Get($model_key)->{modelDetails};
 
-    my $ticket_id           = $self->TicketObj->id;
-    my $ticket_subject      = $self->TicketObj->Subject;
-    my $ticket_transactions = $self->TicketObj->Transactions;
+    my $prompt = RT->Config->Get('TicketSummary');
+    $prompt .= "\nTicket ID: $ticket_id\nSubject: " . $ticket->Subject;
 
-    $summary_prompt .= "\nTicket ID: $ticket_id\nSubject: $ticket_subject";
+    my $transactions = $ticket->Transactions;
+    my $conversation = '';
+    my $max_chars    = 3000;
 
-    my $conversation_input = '';
-    my $max_tokens         = 3000;
-
-    while ( my $transaction = $ticket_transactions->Next ) {
-        my $content = $transaction->Content;
+    while ( my $txn = $transactions->Next ) {
+        my $content = $txn->Content;
         next unless $content;
 
-        if ( $transaction->Type eq 'Correspond' ) {
-            $conversation_input .= "User: $content\n";
-        } elsif ( $transaction->Type eq 'Comment' ) {
-            $conversation_input .= "Staff: $content\n";
+        if ( $txn->Type eq 'Correspond' ) {
+            $conversation .= "User: $content\n";
+        } elsif ( $txn->Type eq 'Comment' ) {
+            $conversation .= "Staff: $content\n";
+        } else {
+            $conversation .= "$content\n";
         }
 
-        last if length($conversation_input) > $max_tokens;
+        last if length($conversation) > $max_chars;
     }
 
-    unless ($conversation_input) {
-        $RT::Logger->info(
-            "No valid content to summarize for ticket #$ticket_id.");
+    unless ($conversation) {
+        RT->Logger->info("No content to summarize for ticket #$ticket_id.");
         return 1;
     }
 
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(15);
+    my $provider
+        = RT::Extension::AI::Providers::Factory->get_provider($provider_name);
 
-    my $request = HTTP::Request->new( POST => $url );
-    $request->header(
-        'Content-Type'  => 'application/json',
-        'Authorization' => "Bearer $api_key",
-        'Accept'        => 'application/json',
-        'User-Agent'    => 'RT-Summary/1.0'
+    my $response = $provider->process_request(
+        prompt       => $prompt,
+        raw_text     => $conversation,
+        model_config => $model_config,
     );
 
-    my $data = {
-        "model"    => "gpt-4",
-        "messages" => [
-            { "role" => "system", "content" => $summary_prompt },
-            { "role" => "user",   "content" => $conversation_input }
-        ],
-        "max_tokens"  => 300,
-        "temperature" => 0.5
-    };
-
-    $request->content( encode_json($data) );
-
-    my $response = $ua->request($request);
-
-    if ( $response->is_success ) {
-        my $result = eval { decode_json( $response->decoded_content ) };
-        if ($@) {
-            $RT::Logger->error("Failed to parse JSON response: $@");
-            return;
-        }
-
-        if ( defined $result->{'choices'}[0]{'message'}{'content'} ) {
-            my $summary = $result->{'choices'}[0]{'message'}{'content'};
-
-            $RT::Logger->info(
-                "Generated summary for ticket #$ticket_id: $summary");
-            $self->TicketObj->AddCustomFieldValue(
-                Field => 'Ticket Summary',
-                Value => $summary
-            );
-        } else {
-            $RT::Logger->error(
-                "Unexpected response structure from OpenAI API for ticket #$ticket_id: "
-                    . $response->decoded_content );
-        }
-    } else {
-        $RT::Logger->error(
-                  "Failed to perform summarization for ticket #$ticket_id: "
-                . $response->status_line . " - "
-                . $response->decoded_content );
+    unless ( $response->{success} ) {
+        RT->Logger->info(
+            "Summary generation failed for ticket #$ticket_id: $response->{error}"
+        );
+        return 1;
     }
+
+    my $summary = $response->{result};
+    RT->Logger->info("Generated summary for ticket #$ticket_id: $summary");
+
+    $ticket->AddCustomFieldValue(
+        Field => 'Ticket Summary',
+        Value => $summary,
+    );
 
     return 1;
 }

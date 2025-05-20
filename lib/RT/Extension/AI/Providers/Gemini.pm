@@ -1,26 +1,29 @@
-package RT::Extension::AI::Providers::OpenAI;
+package RT::Extension::AI::Providers::Gemini;
 
 use strict;
 use warnings;
 
 use base 'RT::Extension::AI::Providers::Provider';
 
-use RT::Extension::AI::Utils;
-use LWP::UserAgent;
 use JSON;
+use RT::Extension::AI::Utils;
+
+sub default_headers {
+    my ( $class, $config ) = @_;
+    return { 'x-goog-api-key' => $config->{api_key} };
+}
 
 sub process_request {
     my ( $self, %args ) = @_;
     my $ua = $self->{ua};
 
     my $request_payload = {
-        model    => $args{model_config}->{modelName},
-        messages => [
-            { role => 'system', content => $args{prompt} },
-            { role => 'user',   content => $args{raw_text} },
-        ],
-        max_tokens  => $args{model_config}->{maxToken},
-        temperature => $args{model_config}->{temperature},
+        contents => [
+            {   role  => "user",
+                parts =>
+                    [ { text => $args{prompt} . "\n" . $args{raw_text} } ],
+            }
+        ]
     };
 
     my $response = $ua->post(
@@ -32,9 +35,18 @@ sub process_request {
     if ( $response->is_success ) {
         my $content = decode_json( $response->decoded_content );
 
+        my $candidate = $content->{candidates}[0];
+        return {
+            success => 0,
+            error   => "No candidates in response",
+            raw     => $content
+            }
+            unless $candidate;
+
+        my $result = $candidate->{content}{parts}[0]{text};
         return {
             success => 1,
-            result  => $content->{choices}[0]{message}{content},
+            result  => $result,
             raw     => $content,
         };
     } else {

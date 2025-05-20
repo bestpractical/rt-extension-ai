@@ -5,95 +5,81 @@ use strict;
 use warnings;
 use base qw(RT::Action);
 
-use HTTP::Request::Common;
-use LWP::UserAgent;
+use RT::Extension::AI::Providers::Factory;
+use Encode;
 use JSON;
 
 sub Prepare {
-    return 1;  # Nothing to prepare
+    return 1;
 }
 
 sub Commit {
-    my $self = shift;
+    my $self      = shift;
+    my $ticket    = $self->TicketObj;
+    my $ticket_id = $ticket->id;
 
-    my $api_key = $ENV{'OPENAI_API_KEY'} || RT->Config->Get('OpenAI_ApiKey');
-    my $url     = RT->Config->Get('OpenAI_ApiUrl');
-    my $sentiment_prompt = RT->Config->Get('TicketSentiment');
+    my $provider_name = $self->Argument || RT->Config->Get('DefaultProvider');
+    my $model_key     = 'GeneralAIModel';
+    my $model_config  = RT->Config->Get($model_key)->{modelDetails};
 
-    my $ticket_id           = $self->TicketObj->id;
-    my $ticket_transactions = $self->TicketObj->Transactions;
-    my $conversation_input  = '';
+    my $prompt = RT->Config->Get('TicketSentiment');
 
-    my $max_tokens = 3000;
+    # Build ticket content
+    my $transactions = $ticket->Transactions;
+    my $conversation = '';
+    my $max_chars    = 3000;
 
-    while ( my $transaction = $ticket_transactions->Next ) {
-        my $content = $transaction->Content;
+    while ( my $txn = $transactions->Next ) {
+        my $content = $txn->Content;
         next unless $content;
-
-        $conversation_input .= $content . "\n";
-        last if length($conversation_input) > $max_tokens;
+        $conversation .= $content . "\n";
+        last if length($conversation) > $max_chars;
     }
 
-    unless ($conversation_input) {
-        $RT::Logger->info("No valid content for sentiment analysis for ticket #$ticket_id.");
+    unless ($conversation) {
+        RT->Logger->info("No content to analyze for ticket #$ticket_id.");
         return 1;
     }
 
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(15);
+    my $provider
+        = RT::Extension::AI::Providers::Factory->get_provider($provider_name);
 
-    my $request = HTTP::Request->new( POST => $url );
-    $request->header(
-        'Content-Type'  => 'application/json',
-        'Authorization' => "Bearer $api_key",
-        'Accept'        => 'application/json',
-        'User-Agent'    => 'RT-SentimentAnalysis/1.0'
+    my $response = $provider->process_request(
+        prompt       => $prompt,
+        raw_text     => $conversation,
+        model_config => $model_config,
     );
 
-    my $data = {
-        "model"    => "gpt-4",
-        "messages" => [
-            { "role" => "system", "content" => $sentiment_prompt },
-            { "role" => "user", "content" => $conversation_input }
-        ],
-        "max_tokens"  => 100,
-        "temperature" => 0.5
-    };
-
-    $request->content( encode_json($data) );
-
-    my $response = $ua->request($request);
-
-    if ( $response->is_success ) {
-        my $result = eval { decode_json( $response->decoded_content ) };
-        if ($@) {
-            $RT::Logger->error("Failed to parse JSON response: $@");
-            return;
-        }
-
-        my $sentiment = $result->{'choices'}[0]{'message'}{'content'} || 'Neutral';
-        my %sentiment_map = (
-            qr/satisfied/i   => 'Satisfied',
-            qr/dissatisfied/i => 'Dissatisfied',
-            qr/neutral/i      => 'Neutral'
+    unless ( $response->{success} ) {
+        RT->Logger->error(
+            "Sentiment analysis failed for ticket #$ticket_id: $response->{error}"
         );
-
-        my $normalized_sentiment = 'Neutral';
-        for my $regex ( keys %sentiment_map ) {
-            if ( $sentiment =~ $regex ) {
-                $normalized_sentiment = $sentiment_map{$regex};
-                last;
-            }
-        }
-
-        $RT::Logger->info("Generated sentiment for ticket #$ticket_id: $normalized_sentiment");
-        $self->TicketObj->AddCustomFieldValue( Field => 'Ticket Sentiment', Value => $normalized_sentiment );
-    } else {
-        $RT::Logger->error(
-            "Failed to perform sentiment analysis for ticket #$ticket_id: "
-                . $response->status_line . " - " . $response->decoded_content
-        );
+        return 1;
     }
+
+    my $sentiment = $response->{result} || 'Neutral';
+
+    # Normalize the result
+    my %sentiment_map = (
+        qr/satisfied/i    => 'Satisfied',
+        qr/dissatisfied/i => 'Dissatisfied',
+        qr/neutral/i      => 'Neutral',
+    );
+
+    my $normalized = 'Neutral';
+    for my $regex ( keys %sentiment_map ) {
+        if ( $sentiment =~ $regex ) {
+            $normalized = $sentiment_map{$regex};
+            last;
+        }
+    }
+
+    RT->Logger->info("Ticket #$ticket_id sentiment: $normalized");
+
+    $ticket->AddCustomFieldValue(
+        Field => 'Ticket Sentiment',
+        Value => $normalized,
+    );
 
     return 1;
 }

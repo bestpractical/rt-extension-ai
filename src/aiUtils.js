@@ -14,7 +14,7 @@ export async function fetchAiResults(inputText, optionType) {
 		const suggestion = await response.text();
 
 		if (!suggestion) {
-			console.warn('No suggestion found in response:', jsonData);
+			console.warn('No suggestion found in response:', suggestion);
 			return 'No suggestion available.';
 		}
 

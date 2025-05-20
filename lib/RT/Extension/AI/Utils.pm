@@ -35,9 +35,9 @@ sub create_user_agent {
     $ua->timeout($args{timeout} // 10);
     $ua->env_proxy;
 
-    if ($args{headers}) {
-        foreach my $header (keys %{ $args{headers} }) {
-            $ua->default_header($header => $args{headers}{$header});
+    if ( $args{headers} ) {
+        foreach my $header ( keys %{ $args{headers} } ) {
+            $ua->default_header( $header => $args{headers}{$header} );
         }
     }
 

@@ -1,9 +1,9 @@
 <%ARGS>
-$rawText       => ''
-$callType      => 'autocomplete'
-$translateFrom => ''
-$translateTo   => ''
-$provider      => 'OpenAI'
+$rawText        => ''
+$callType       => 'autocomplete'
+$translateFrom  => ''
+$translateTo    => ''
+$provider       => RT->Config->Get('DefaultProvider') || 'OpenAI'
 </%ARGS>
 
 <%INIT>
@@ -12,11 +12,9 @@ use JSON;
 use RT::Extension::AI::Utils;
 use RT::Extension::AI::Providers::Factory;
 
-# Initialize the response
-my $response;
+my $result_payload;
 
 try {
-    # Load provider configuration
     my $config = RT::Extension::AI::Utils->get_provider_config($provider);
     unless ($config) {
         die "Configuration for provider '$provider' not found.";
@@ -24,29 +22,44 @@ try {
 
     my $prompt = RT->Config->Get(ucfirst($callType));
 
-    # Append translation details if applicable
     if ($callType eq 'translate') {
         my $from_lang = $translateFrom || 'English';
         my $to_lang   = $translateTo   || 'Spanish';
         $prompt .= " Translate from $from_lang to $to_lang.";
     }
 
-    # Choose model configuration
     my $model_config = $config->{models}->{$callType} || $config->{models}->{general};
 
-    # Call the AI provider
-    my $provider_instance = RT::Extension::AI::Providers::Factory->get_provider($provider, $config);
+    my $provider_instance = RT::Extension::AI::Providers::Factory->get_provider($provider);
 
-    $response = $provider_instance->process_request(
+    my $response = $provider_instance->process_request(
         prompt       => $prompt,
         raw_text     => $rawText,
         model_config => $model_config,
     );
+
+    if ( $response->{success} ) {
+        $result_payload = {
+            success => 1,
+            result  => $response->{result},
+        };
+    } else {
+        $result_payload = {
+            success => 0,
+            error   => $response->{error} || "Unknown error",
+        };
+        RT->Logger->error("AI request failed: " . $response->{error});
+    }
 } catch {
     RT::Logger->error("Failed to process AI request: $_");
-    $response = "Error: Unable to process the request.";
+    $result_payload = {
+        success => 0,
+        error   => "Internal server error: $_",
+    };
 };
 
-$m->out($response);
+my $result_text = $result_payload->{result} || '';
+
+$m->out( $result_text );
 $m->abort();
 </%INIT>
