@@ -2,8 +2,12 @@
 Changes
 etc/AI_Config.pm
 etc/initialdata
-html/Helpers/OpenAiSuggestion/aiModal
-html/Helpers/OpenAiSuggestion/aisuggestion
+html/AI/AdjustToneForm
+html/AI/ModalContent
+html/AI/SuggestionForm
+html/AI/TranslateForm
+html/Helpers/AISuggestion/modal
+html/Helpers/AISuggestion/process
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -20,6 +24,11 @@ inc/YAML/Tiny.pm
 lib/RT/Action/AddTicketSentiment.pm
 lib/RT/Action/AddTicketSummary.pm
 lib/RT/Extension/AI.pm
+lib/RT/Extension/AI/Providers/Factory.pm
+lib/RT/Extension/AI/Providers/Gemini.pm
+lib/RT/Extension/AI/Providers/OpenAI.pm
+lib/RT/Extension/AI/Providers/Provider.pm
+lib/RT/Extension/AI/Utils.pm
 Makefile
 Makefile.PL
 MANIFEST			This list of files
@@ -36,6 +45,8 @@ src/aiUtils.js
 src/index.js
 src/modalUtils.js
 src/rtextensionai.js
+src/suggestion.js
+static/css/rt-extension-ai.css
 static/js/rt-extension-ai.js
 theme/icons/ai-icon.svg
 vite.config.js

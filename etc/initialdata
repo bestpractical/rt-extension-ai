@@ -1,56 +1,61 @@
 # Add new conditions, actions, scrips to RT
 
-push @CustomFields, {
-    Name        => 'Ticket Summary',
-    Type        => 'Text',
-    LookupType  => 'RT::Queue-RT::Ticket',
-};
+my $defaultProvider = RT::Config->Get('DefaultProvider');
 
-push @CustomFields, {
-    LookupType  => 'RT::Queue-RT::Ticket',
-    Name        => 'Ticket Sentiment',
-    Type        => 'SelectSingle',
-    RenderType  => 'Dropdown',
-    Values      => [
+push @CustomFields,
+    {
+    Name       => 'Ticket Summary',
+    Type       => 'Text',
+    LookupType => 'RT::Queue-RT::Ticket',
+    };
+
+push @CustomFields,
+    {
+    LookupType => 'RT::Queue-RT::Ticket',
+    Name       => 'Ticket Sentiment',
+    Type       => 'SelectSingle',
+    RenderType => 'Dropdown',
+    Values     => [
         { Name => 'Dissatisfied', Description => '', SortOrder => 1 },
-        { Name => 'Neutral',  Description => '',  SortOrder => 2 },
-        { Name => 'Satisfied',  Description => '',  SortOrder => 3 },
+        { Name => 'Neutral',      Description => '', SortOrder => 2 },
+        { Name => 'Satisfied',    Description => '', SortOrder => 3 },
     ],
-};
+    };
 
 @ScripConditions = (
-    {
-        Name                 => 'Trigger On comment and On Correspond',
-        Description          => 'From extension: When someone reply or comment on ticket',
+    {   Name                 => 'On comment or On Correspond',
+        Description          => 'When someone replies or comments on ticket',
         ApplicableTransTypes => 'Correspond,Comment',
-        ExecModule	         => 'AnyTransaction'
+        ExecModule           => 'AnyTransaction'
     },
 );
 
 @ScripActions = (
-    {
-        Name        => 'Generate automatic ticket summarization',
-        Description => 'From extension: set field value of summarization of ticket',
-        ExecModule  => 'AddTicketSummary',
+    {   Name        => 'Generate Ticket Summary',
+        Description =>
+            'Automatically generate and store a summary of the ticket conversation.',
+        ExecModule => 'AddTicketSummary',
+        Argument   => $defaultProvider
     },
-    {
-        Name        => 'Generate automatic ticket setiment analysis',
-        Description => 'From extension: set field value of sentimental analysis of reply text',
-        ExecModule  => 'AddTicketSentiment',
+    {   Name        => 'Analyze Ticket Sentiment',
+        Description =>
+            'Automatically classify sentiment of the latest ticket update.',
+        ExecModule => 'AddTicketSentiment',
+        Argument   => $defaultProvider
     },
 );
 
 @Scrips = (
-    {
-        Description    => 'From extension: If someone comment or reply then add summary',
-        ScripCondition => 'Trigger On comment and On Correspond',
-        ScripAction    => 'Generate automatic ticket summarization',
+    {   Description    => 'On Comment or Reply Add Summary',
+        ScripCondition => 'On comment or On Correspond',
+        ScripAction    => 'Generate Ticket Summary',
         Template       => 'Blank'
     },
-    {
-        Description    => 'From extension: Add Sentiment on reply of the team member',
+    {   Description    => 'Add Sentiment On Correspond',
         ScripCondition => 'On Correspond',
-        ScripAction    => 'Generate automatic ticket setiment analysis',
+        ScripAction    => 'Analyze Ticket Sentiment',
         Template       => 'Blank'
     },
 );
+
+1;

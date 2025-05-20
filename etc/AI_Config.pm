@@ -37,22 +37,29 @@ Set($AutoCompleteModel,
     }
    );
 
+# Default provider used for initialdata
+Set( $DefaultProvider, 'OpenAI' );
+
 Set(%AIProviders,
     'OpenAI' => {
-        api_key => 'API KEY',
+        api_key => 'YOUR_OPEN_API_KEY',
         timeout => 15,
         url     => 'https://api.openai.com/v1/chat/completions'
+    },
+    'Gemini' => {
+        api_key => 'YOUR_GOOGLE_GEMINI_API_KEY',
+        timeout => 20,
+        url     => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
     }
 );
 
-my $messageBoxRichTextInitArguments = RT->Config->Get('MessageBoxRichTextInitArguments');
+my $messageBoxRichTextInitArguments
+    = RT->Config->Get('MessageBoxRichTextInitArguments');
 
 $messageBoxRichTextInitArguments->{extraPlugins} //= [];
-push @{$messageBoxRichTextInitArguments->{extraPlugins}}, 'RtExtensionAi';
-
+push @{ $messageBoxRichTextInitArguments->{extraPlugins} }, 'RtExtensionAi';
 
 # Add 'aiSuggestion' to the toolbar, creating a new array
 $messageBoxRichTextInitArguments->{toolbar} //= [];
-$messageBoxRichTextInitArguments->{toolbar} = [
-    @{$messageBoxRichTextInitArguments->{toolbar}}, 'aiSuggestion'
-];
+$messageBoxRichTextInitArguments->{toolbar}
+    = [ @{ $messageBoxRichTextInitArguments->{toolbar} }, 'aiSuggestion' ];

@@ -16,38 +16,29 @@ RT-Extension-AI - AI Features for Request Tracker extension
 
 This RT extension introduces AI-powered features to enhance ticket handling efficiency and improve the user experience in Request Tracker (RT).
 
-=over 4
-
-=item 1. Autocomplete
-
-This aids staff users in writing better responses and adding internal comments to support tickets. 
-It also helps end-users submit better questions when creating and replying to tickets via the Self Service interface.
-When a user starts to type in a content box, the current written text is set as context to ChatGPT, 
-which suggests the next three words to the user. On pressing Tab, the suggestion will be appended to the current text.
-
-=item 2. AI Filters
+=head1 FEATURES
 
 =over 4
 
-=item * Adjust Tone/Voice: Modify the tone of the text.
+=item * Autocomplete
 
-=item * AI Suggestion: Provides suggestions or answers for user queries.
+    Suggests the next three words while typing in ticket comments or replies.
 
-=item * Translate: Translates ticket content into different languages.
+=item * AI CKEditor Actions
+
+    - Adjust Tone - rephrase content for professionalism and clarity.
+    - AI Suggestion - generate responses based on user input.
+    - Translate - translate ticket text between languages.
+
+=item * Ticket Sentiment
+
+    Automatically analyzes user replies and categorizes sentiment (Satisfied, Dissatisfied, Neutral).
+
+=item * Ticket Summarization
+
+    Generates a concise summary based on ticket conversation history.
 
 =back
-
-=item 3. Ticket Sentiment
-
-A custom field, Ticket Sentiment, has been added to classify ticket responses as Satisfied, Dissatisfied, or Neutral using OpenAI's API.
-
-=item 4. Ticket Summarization
-
-Automatically generates ticket summaries based on the ticket conversation between users and staff responses. This ensures clarity in ticket updates.
-
-=back
-
-=cut
 
 =head1 RT VERSION
 
@@ -95,36 +86,29 @@ See below for additional configuration details.
 
 This section outlines the configuration steps to enable the AI functionalities in RT.
 
-=head2 OpenAI API
+=head2 AI Provider Setup
 
-    Following are the variables used in the extension for API url and key :
+Set the default provider and its config:
 
-    Set($OpenAI_ApiUrl, "https://api.openai.com/v1/chat/completions");
-    Set($OpenAI_ApiKey, "Your open AI API Key");
+    Set($DefaultProvider, 'OpenAI');
 
-=head2 Prompts
+    Set(%AIProviders,
+        'OpenAI' => {
+            api_key => 'YOUR_API_KEY',
+            timeout => 15,
+            url     => 'https://api.openai.com/v1/chat/completions',
+        }
+    );
 
-    We added customized prompts for various tasks :
-
-    Set($TicketSummary, "You are a helpdesk assistant. Summarize the following ticket conversation between a user and the staff in a precise manner. Ensure the summary is clear and concise, and focuses on the core points of the discussion.");
-    Set($TicketSentiment, "You are a sentiment analysis assistant. Based on the conversation, classify the overall sentiment into one of the following categories: Satisfied, Dissatisfied, or Neutral.");
-    Set($AdjustTone, "You are a language expert. Your task is to paraphrase the following text to improve clarity, tone, and readability, while maintaining the original meaning. Ensure that the paraphrased version is more concise, professional, and customer-friendly.");
-    Set($AiSuggestion, "You are a knowledgeable assistant. Based on the following question or scenario, provide clear and concise suggestions or answers. Make sure to consider different perspectives and provide practical advice that is easy to understand.");
-    Set($Translate, "You are a highly skilled translator. Ensure that the translation maintains the original meaning and is idiomatic in the target language. Your task is to translate the following text from .");
-    Set($Autocomplete, "You are an autocomplete engine. For the given text, predict the next three words. Do not provide explanations or additional suggestions. If the text implies a request for assistance, only return the predicted words without addressing the request for help.");
-
-
-=head2 Model Config 
-
-    Following is the AI model's configuration to set the model details:
+=head2 Model Configuration
 
     Set($GeneralAIModel, {
-    modelDetails => {
-        modelName   => 'gpt-4',
-        maxToken    => 300,
-        temperature => 0.5,
-        stream      => \0
-    }
+        modelDetails => {
+            modelName   => 'gpt-4',
+            maxToken    => 300,
+            temperature => 0.5,
+            stream      => \0,
+        }
     });
 
     Set($AutoCompleteModel, {
@@ -132,48 +116,58 @@ This section outlines the configuration steps to enable the AI functionalities i
             modelName   => 'gpt-3.5-turbo',
             maxToken    => 10,
             temperature => 0.7,
-            stream      => \1
+            stream      => \1,
         }
     });
 
-=head2 Ckeditor Config 
+=head2 Prompts
 
-    We added a custom plugin 'aiSuggestion' to the Ckeditor default configuration.
+Define system-level instructions for each AI task:
+
+    Set($TicketSummary, "You are a helpdesk assistant. Summarize the conversation...");
+    Set($TicketSentiment, "Classify the overall sentiment...");
+    Set($AdjustTone,      "Paraphrase the text...");
+    Set($AiSuggestion,    "Provide practical advice...");
+    Set($Translate,       "Translate the text from...");
+    Set($Autocomplete,    "Predict the next three words...");
+
+=head2 CKEditor Integration
+
+To activate the AI button in rich text editors:
 
     my $messageBoxRichTextInitArguments = RT->Config->Get('MessageBoxRichTextInitArguments');
-
     $messageBoxRichTextInitArguments->{extraPlugins} //= [];
     push @{$messageBoxRichTextInitArguments->{extraPlugins}}, 'RtExtensionAi';
 
-
-    # Add 'aiSuggestion' to the toolbar, creating a new array
     $messageBoxRichTextInitArguments->{toolbar}{items} //= [];
-    $messageBoxRichTextInitArguments->{toolbar}{items} = [
-        @{$messageBoxRichTextInitArguments->{toolbar}{items}}, 'aiSuggestion'
-    ];
+    push @{$messageBoxRichTextInitArguments->{toolbar}{items}}, 'aiSuggestion';
 
+=head1 SCRIPS AND CUSTOM FIELDS
 
-=head1 RT Scrips and Custom Fields
+=head2 Installed Custom Fields
 
-=head2 Scrips
+- C<Ticket Summary>
+- C<Ticket Sentiment> (Dropdown: Satisfied, Dissatisfied, Neutral)
 
-This extension will install two new Scrips:
+=head2 Installed Custom Fields
 
-=over
+=over 4
 
-=item On Comment and On Correspond Trigger
+=item * Ticket Summary
 
-Generate ticket summary when conversation occurs between user and staff.
-
-=item On Correspond Trigger
-
-Automatically update the 'Ticket Sentiment' field when user updates on ticket.
+=item * Ticket Sentiment (Dropdown: Satisfied, Dissatisfied, Neutral)
 
 =back
 
-=head2 Custom Fields
+=head2 Installed Scrips
 
-This extension adds two ticket custom fields: C<Ticket Sentiment> and C<Ticket Summary>.
+=over 4
+
+=item * On Comment or Correspond - Adds a generated summary.
+
+=item * On Correspond - Classifies sentiment and updates the custom field.
+
+=back
 
 =head2 RtExtensionAi
 
@@ -190,7 +184,7 @@ To enable the plugin, add the following line to your RT_SiteConfig.pm file:
     });
 
 
-=item Updating the plugin
+=head2 Updating the plugin
 
 The plugin uses Vite to build the assets. Information on working with CKEditor plugins can be 
 found on their website, a good place to start is here:
@@ -198,14 +192,15 @@ found on their website, a good place to start is here:
 L<https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html>
 
 
-=item Building the plugin
+=item BUILDING THE JS PLUGIN
 
-To build the plugin, run the following command:
+We use Vite to build the CKEditor plugin.
 
-    =item C<npm install>
-    =item C<npm run build>
+    npm install
+    npm run build
 
-=back
+For more details: https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html
+
 
 =head1 AUTHOR
 
@@ -235,7 +230,7 @@ href="http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-PagerDuty">r
 
 =head1 LICENSE AND COPYRIGHT
 
-This software is Copyright (c) 2022 by BPS
+This software is Copyright (c) 2025 by BPS
 
 This is free software, licensed under:
 
