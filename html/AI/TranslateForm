@@ -10,13 +10,7 @@
 
     <div class="mb-2">
         <label class="form-label small text-muted mb-1">Translate From</label>
-        <input
-            type="text"
-            id="translateFrom"
-            name="translateFrom"
-            class="form-control"
-            value="<% $transFrom |n %>"
-        >
+         <& /Elements/SelectLang, Name => 'translateFrom', Default => $transFrom &>
     </div>
 
     <div class="mb-2">
@@ -30,13 +24,8 @@
 
     <div class="mb-2">
         <label class="form-label small text-muted mb-1">Translate To</label>
-        <input
-            type="text"
-            id="translateTo"
-            name="translateTo"
-            class="form-control"
-            value="<% $transTo |n %>"
-        >
+        <& /Elements/SelectLang, Name => 'translateTo', Default => $transTo &>
+
     </div>
 
     <div class="mb-3">
