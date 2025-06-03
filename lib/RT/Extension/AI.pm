@@ -8,6 +8,57 @@ our $VERSION = '0.01';
 RT->AddJavaScript('rt-extension-ai.js');
 RT->AddStyleSheets('rt-extension-ai.css');
 
+if ( RT->Config->can('RegisterPluginConfig') ) {
+    RT->Config->RegisterPluginConfig(
+        Plugin  => 'AI',
+        Content => [
+            {   Name => 'TicketSummary',
+                Help => 'Prompt to summarize ticket conversation.',
+            },
+            {   Name => 'TicketSentiment',
+                Help => 'Prompt to classify overall sentiment.',
+            },
+            {   Name => 'AdjustTone',
+                Help => 'Prompt to adjust tone for professionalism.',
+            },
+            {   Name => 'AiSuggestion',
+                Help => 'Prompt for providing AI suggestions.',
+            },
+            {   Name => 'Translate',
+                Help =>
+                    'Prompt for translating text using source/target language.',
+            },
+            {   Name => 'Autocomplete',
+                Help => 'Prompt for predicting next three words.',
+            },
+            {   Name => 'GeneralAIModel',
+                Help => 'Configuration for the general-purpose AI model.',
+            },
+            {   Name => 'AutoCompleteModel',
+                Help => 'Configuration for autocomplete-specific AI model.',
+            },
+            {   Name => 'DefaultProvider',
+                Help => 'Default AI provider.',
+            },
+            {   Name => 'AIProviders',
+                Help => 'List of available AI providers and API details.',
+            },
+        ],
+        Meta => {
+            TicketSummary     => { Type => 'SCALAR' },
+            TicketSentiment   => { Type => 'SCALAR' },
+            AdjustTone        => { Type => 'SCALAR' },
+            AiSuggestion      => { Type => 'SCALAR' },
+            Translate         => { Type => 'SCALAR' },
+            Autocomplete      => { Type => 'SCALAR' },
+            GeneralAIModel    => { Type => 'HASH' },
+            AutoCompleteModel => { Type => 'HASH' },
+            DefaultProvider   => { Type => 'SCALAR' },
+            AIProviders       => { Type => 'HASH' },
+        }
+    );
+}
+
 =head1 NAME
 
 RT-Extension-AI - AI Features for Request Tracker extension
