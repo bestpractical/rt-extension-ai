@@ -1,4 +1,4 @@
-package RT::Extension::AI::Providers::Factory;
+package RT::Extension::AI::Provider::Factory;
 
 use strict;
 use warnings;
@@ -12,7 +12,7 @@ sub get_provider {
     $provider_name ||= RT->Config->Get('DefaultProvider') || 'OpenAI';
     $config        ||= RT->Config->Get('AIProviders')->{$provider_name};
 
-    my $module = "RT::Extension::AI::Providers::$provider_name";
+    my $module = "RT::Extension::AI::Provider::$provider_name";
 
     unless ( $_loaded{$module} ) {
         eval { load $module };

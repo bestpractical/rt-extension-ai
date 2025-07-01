@@ -5,7 +5,7 @@ use strict;
 use warnings;
 use base qw(RT::Action);
 
-use RT::Extension::AI::Providers::Factory;
+use RT::Extension::AI::Provider::Factory;
 use Encode;
 use JSON;
 
@@ -42,7 +42,7 @@ sub Commit {
     }
 
     my $provider
-        = RT::Extension::AI::Providers::Factory->get_provider($provider_name);
+        = RT::Extension::AI::Provider::Factory->get_provider($provider_name);
 
     my $response = $provider->process_request(
         prompt       => $prompt,

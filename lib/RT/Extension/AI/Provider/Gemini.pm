@@ -1,9 +1,9 @@
-package RT::Extension::AI::Providers::Gemini;
+package RT::Extension::AI::Provider::Gemini;
 
 use strict;
 use warnings;
 
-use base 'RT::Extension::AI::Providers::Provider';
+use base 'RT::Extension::AI::Provider';
 
 use JSON;
 use RT::Extension::AI::Utils;

@@ -1,9 +1,9 @@
-package RT::Extension::AI::Providers::OpenAI;
+package RT::Extension::AI::Provider::OpenAI;
 
 use strict;
 use warnings;
 
-use base 'RT::Extension::AI::Providers::Provider';
+use base 'RT::Extension::AI::Provider';
 
 use RT::Extension::AI::Utils;
 use LWP::UserAgent;

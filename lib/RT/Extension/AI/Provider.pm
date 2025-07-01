@@ -1,4 +1,4 @@
-package RT::Extension::AI::Providers::Provider;
+package RT::Extension::AI::Provider;
 
 use strict;
 use warnings;
