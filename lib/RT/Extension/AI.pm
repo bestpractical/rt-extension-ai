@@ -5,6 +5,10 @@ package RT::Extension::AI;
 
 our $VERSION = '0.01';
 
+require RT::Extension::AI::Provider;
+require RT::Extension::AI::Provider::OpenAI;
+require RT::Extension::AI::Provider::Gemini;
+
 RT->AddJavaScript('rt-extension-ai.js');
 RT->AddStyleSheets('rt-extension-ai.css');
 

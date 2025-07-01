@@ -10,7 +10,6 @@ $provider       => RT->Config->Get('DefaultProvider') || 'OpenAI'
 use Try::Tiny;
 use JSON;
 use RT::Extension::AI::Utils;
-use RT::Extension::AI::Provider::Factory;
 
 my $result_payload;
 
@@ -30,7 +29,8 @@ try {
 
     my $model_config = $config->{models}->{$callType} || $config->{models}->{general};
 
-    my $provider_instance = RT::Extension::AI::Provider::Factory->get_provider($provider);
+    my $provider_class = "RT::Extension::AI::Provider::" . $provider;
+    my $provider_instance = $provider_class->new(config => RT->Config->Get('AIProviders')->{$provider});
 
     my $response = $provider_instance->process_request(
         prompt       => $prompt,

@@ -5,7 +5,6 @@ use strict;
 use warnings;
 use base qw(RT::Action);
 
-use RT::Extension::AI::Provider::Factory;
 use Encode;
 use JSON;
 
@@ -49,8 +48,8 @@ sub Commit {
         return 1;
     }
 
-    my $provider
-        = RT::Extension::AI::Provider::Factory->get_provider($provider_name);
+    my $provider_class = "RT::Extension::AI::Provider::" . $provider_name;
+    my $provider = $provider_class->new(config => RT->Config->Get('AIProviders')->{$provider_name});
 
     my $response = $provider->process_request(
         prompt       => $prompt,
