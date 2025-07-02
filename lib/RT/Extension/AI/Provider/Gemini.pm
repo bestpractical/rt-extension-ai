@@ -6,7 +6,6 @@ use warnings;
 use base 'RT::Extension::AI::Provider';
 
 use JSON;
-use RT::Extension::AI::Utils;
 
 sub default_headers {
     my ( $class, $config ) = @_;

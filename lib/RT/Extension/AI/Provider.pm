@@ -2,6 +2,7 @@ package RT::Extension::AI::Provider;
 
 use strict;
 use warnings;
+use LWP::UserAgent;
 
 sub default_headers {
     my ( $class, $config ) = @_;
@@ -30,7 +31,7 @@ sub new {
         return;
     }
 
-    $config->{ua} = RT::Extension::AI::Utils::create_user_agent(
+    $config->{ua} = $class->create_user_agent(
         timeout => $config->{timeout},
         headers => $class->default_headers($config)
     );
@@ -42,6 +43,23 @@ sub new {
 
 sub process_request {
     die "Method 'process_request' not implemented in the provider";
+}
+
+sub create_user_agent {
+    my $self = shift;
+    my (%args) = @_;
+
+    my $ua = LWP::UserAgent->new;
+    $ua->timeout($args{timeout} // 10);
+    $ua->env_proxy;
+
+    if ( $args{headers} ) {
+        foreach my $header ( keys %{ $args{headers} } ) {
+            $ua->default_header( $header => $args{headers}{$header} );
+        }
+    }
+
+    return $ua;
 }
 
 1;

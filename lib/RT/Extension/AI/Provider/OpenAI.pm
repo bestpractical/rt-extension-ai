@@ -5,8 +5,6 @@ use warnings;
 
 use base 'RT::Extension::AI::Provider';
 
-use RT::Extension::AI::Utils;
-use LWP::UserAgent;
 use JSON;
 
 sub process_request {

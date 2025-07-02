@@ -9,7 +9,6 @@ $translateTo    => 'Spanish'
 </%ARGS>
 <%INIT>
 use JSON;
-use RT::Extension::AI::Utils;
 
 my $queue = 'Default';
 my $result_payload;
