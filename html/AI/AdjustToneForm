@@ -22,7 +22,7 @@
   </div>
 
   <div class="mb-3">
-    <label for="adjustToneType" class="form-label">Adjustment Type:</label>
+    <label for="adjustToneType" class="form-label">Adjustment Type</label>
     <select id="adjustToneType" name="adjustToneType" class="form-select">
       <option value="formal">Formal</option>
       <option value="casual">Casual</option>
