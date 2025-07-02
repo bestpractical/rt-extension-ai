@@ -11,6 +11,12 @@ sub default_headers {
     };
 }
 
+=head2 new config => %config
+
+Accepts a hash that is the main AI config for the current queue.
+
+=cut
+
 sub new {
     my ( $class, %args ) = @_;
     my $config = $args{config};

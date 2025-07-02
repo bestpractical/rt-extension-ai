@@ -33,9 +33,9 @@ export default class RtExtensionAi extends CKEDITOR.Plugin {
 		editor.ui.componentFactory.add('aiSuggestion', (locale) => {
 			const dropdownItems = new CKEDITOR.Collection();
 
-			dropdownItems.add(this.createDropdownItem('Adjust Tone/Voice', 'adjustTone'));
-			dropdownItems.add(this.createDropdownItem('AI Suggestion', 'aisuggestion'));
-			dropdownItems.add(this.createDropdownItem('Translate', 'translate'));
+			dropdownItems.add(this.createDropdownItem('Adjust Tone/Voice', 'adjust_tone'));
+			dropdownItems.add(this.createDropdownItem('AI Suggestion', 'suggest_response'));
+			dropdownItems.add(this.createDropdownItem('Translate', 'translate_content'));
 
 			const dropdownView = CKEDITOR.createDropdown(locale, CKEDITOR.DropdownButtonView);
 
@@ -81,7 +81,7 @@ export default class RtExtensionAi extends CKEDITOR.Plugin {
 				}
 
 				try {
-					const suggestion = await fetchAiResults(text, 'autocomplete');
+					const suggestion = await fetchAiResults(text, 'autocomplete_text');
 
 					if (suggestion) {
 						showAutocompletePlaceholder(editor, suggestion);

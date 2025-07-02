@@ -17,13 +17,6 @@ sub Commit {
     my $ticket    = $self->TicketObj;
     my $ticket_id = $ticket->id;
 
-    my $provider_name = $self->Argument || RT->Config->Get('DefaultProvider');
-    my $model_key     = 'GeneralAIModel';
-    my $model_config  = RT->Config->Get($model_key)->{modelDetails};
-
-    my $prompt = RT->Config->Get('TicketSummary');
-    $prompt .= "\nTicket ID: $ticket_id\nSubject: " . $ticket->Subject;
-
     my $transactions = $ticket->Transactions;
     my $conversation = '';
     my $max_chars    = 3000;
@@ -48,13 +41,16 @@ sub Commit {
         return 1;
     }
 
-    my $provider_class = "RT::Extension::AI::Provider::" . $provider_name;
-    my $provider = $provider_class->new(config => RT->Config->Get('AIProviders')->{$provider_name});
+    my $queue = 'Default';
+    my $config = RT->Config->Get('RT_AI_Provider');
+    $config = $config->{$queue};
+
+    my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
+    my $provider = $provider_class->new(config => $config);
 
     my $response = $provider->process_request(
-        prompt       => $prompt,
+        prompt       => $config->{prompts}{summarize_ticket},
         raw_text     => $conversation,
-        model_config => $model_config,
     );
 
     unless ( $response->{success} ) {

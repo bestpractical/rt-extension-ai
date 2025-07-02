@@ -1,7 +1,5 @@
 # Add new conditions, actions, scrips to RT
 
-my $defaultProvider = RT::Config->Get('DefaultProvider');
-
 push @CustomFields,
     {
     Name       => 'Ticket Summary',
@@ -35,13 +33,11 @@ push @CustomFields,
         Description =>
             'Automatically generate and store a summary of the ticket conversation.',
         ExecModule => 'AddTicketSummary',
-        Argument   => $defaultProvider
     },
     {   Name        => 'Analyze Ticket Sentiment',
         Description =>
             'Automatically classify sentiment of the latest ticket update.',
         ExecModule => 'AddTicketSentiment',
-        Argument   => $defaultProvider
     },
 );
 

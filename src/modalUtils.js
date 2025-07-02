@@ -250,7 +250,7 @@ function restoreEditorSelection(editor, savedSelection) {
 export async function createSuggestionModal(
 	editorContent,
 	editor,
-	callType = 'aisuggestion',
+	callType = 'suggest_response',
 	isSelectedText = false
 ) {
 	if (!editor || !editor.model) {

@@ -1,41 +1,36 @@
+% $m->out( $result_text );
+% $m->abort();
+
 <%ARGS>
 $rawText        => ''
 $callType       => 'autocomplete'
-$translateFrom  => ''
-$translateTo    => ''
-$provider       => RT->Config->Get('DefaultProvider') || 'OpenAI'
+$translateFrom  => 'English'
+$translateTo    => 'Spanish'
 </%ARGS>
-
 <%INIT>
-use Try::Tiny;
 use JSON;
 use RT::Extension::AI::Utils;
 
+my $queue = 'Default';
 my $result_payload;
+my $result_text;
 
-try {
-    my $config = RT::Extension::AI::Utils->get_provider_config($provider);
-    unless ($config) {
-        die "Configuration for provider '$provider' not found.";
-    }
+my $config = RT->Config->Get('RT_AI_Provider');
+$config = $config->{$queue};
 
-    my $prompt = RT->Config->Get(ucfirst($callType));
+if ($config) {
+    my $prompt = $config->{prompts}{$callType};
 
     if ($callType eq 'translate') {
-        my $from_lang = $translateFrom || 'English';
-        my $to_lang   = $translateTo   || 'Spanish';
-        $prompt .= " Translate from $from_lang to $to_lang.";
+        $prompt .= " Translate from $translateFrom to $translateTo.";
     }
 
-    my $model_config = $config->{models}->{$callType} || $config->{models}->{general};
-
-    my $provider_class = "RT::Extension::AI::Provider::" . $provider;
-    my $provider_instance = $provider_class->new(config => RT->Config->Get('AIProviders')->{$provider});
+    my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
+    my $provider_instance = $provider_class->new(config => $config);
 
     my $response = $provider_instance->process_request(
         prompt       => $prompt,
         raw_text     => $rawText,
-        model_config => $model_config,
     );
 
     if ( $response->{success} ) {
@@ -50,16 +45,12 @@ try {
         };
         RT->Logger->error("AI request failed: " . $response->{error});
     }
-} catch {
-    RT::Logger->error("Failed to process AI request: $_");
-    $result_payload = {
-        success => 0,
-        error   => "Internal server error: $_",
-    };
-};
 
-my $result_text = $result_payload->{result} || '';
+    $result_text = $result_payload->{result} || '';
+}
+else {
+    $result_text = "Configuration for queue $queue not found.";
+    RT->Logger->error($result_text);
+}
 
-$m->out( $result_text );
-$m->abort();
 </%INIT>
