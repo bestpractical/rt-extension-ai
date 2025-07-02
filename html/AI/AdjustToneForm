@@ -6,6 +6,11 @@
   hx-indicator="#spinner"
   hx-trigger="submit"
 >
+  <input type="hidden" name="callType" value="adjust_tone">
+
+%if ( $TicketObj ) {
+<input type="hidden" class="hidden" name="id" value="<% $TicketObj->Id %>">
+% }
   <div class="mb-3">
     <textarea
       name="rawText"
@@ -18,7 +23,7 @@
 
   <div class="mb-3">
     <label for="adjustToneType" class="form-label">Adjustment Type:</label>
-    <select id="adjustToneType" name="adjustToneType" class="form-control">
+    <select id="adjustToneType" name="adjustToneType" class="form-select">
       <option value="formal">Formal</option>
       <option value="casual">Casual</option>
       <option value="professional">Professional</option>
@@ -62,4 +67,5 @@
 
 <%ARGS>
 $rawText   => ''
+$TicketObj => undef
 </%ARGS>

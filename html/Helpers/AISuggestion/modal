@@ -3,16 +3,22 @@ $rawText    => ''
 $callType   => ''
 $transFrom  => 'en'
 $transTo    => 'es'
+$TicketId   => undef
 </%ARGS>
 
 <%INIT>
+my $TicketObj;
+if ( $TicketId ) {
+    $TicketObj = LoadTicket($TicketId);
+}
+
 my $modal_title;
 my $form_component;
 
-if ($callType eq 'translate') {
+if ($callType eq 'translate_content') {
     $modal_title = "Translate Text";
     $form_component = '/AI/TranslateForm';
-} elsif ($callType eq 'adjustTone') {
+} elsif ($callType eq 'adjust_tone') {
     $modal_title = "Adjust Tone/Voice";
     $form_component = '/AI/AdjustToneForm';
 } else {
@@ -27,5 +33,6 @@ if ($callType eq 'translate') {
   rawText         => $rawText,
   callType        => $callType,
   transFrom       => $transFrom,
-  transTo         => $transTo 
+  transTo         => $transTo,
+  TicketObj       => $TicketObj
 &>

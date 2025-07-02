@@ -41,9 +41,9 @@ sub Commit {
         return 1;
     }
 
-    my $queue = 'Default';
+    my $queue = $self->TicketObj->QueueObj->Name;
     my $config = RT->Config->Get('RT_AI_Provider');
-    $config = $config->{$queue};
+    $config = $config->{$queue} || $config->{Default};
 
     my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
     my $provider = $provider_class->new(config => $config);

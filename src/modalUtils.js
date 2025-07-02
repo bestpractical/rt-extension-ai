@@ -1,4 +1,4 @@
-import { extractParagraphsFromHTML } from './aiUtils.js';
+import { extractParagraphsFromHTML, getTicketIdFromUrl } from './aiUtils.js';
 
 export class ModalManager {
 	constructor() {
@@ -267,12 +267,12 @@ export async function createSuggestionModal(
 		editorContent = extractParagraphsFromHTML(editorContent);
 
 		const savedSelection = saveEditorSelection(editor);
-
 		let modalHtml;
 		try {
 			modalHtml = await loadModalContent('/Helpers/AISuggestion/modal', {
 				rawText: editorContent,
-				callType
+				callType,
+				TicketId: getTicketIdFromUrl(window.location.href)
 			});
 		} catch (error) {
 			console.error('Failed to load modal content:', error);

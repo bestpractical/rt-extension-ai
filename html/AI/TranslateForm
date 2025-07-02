@@ -6,8 +6,10 @@
     hx-swap="innerHTML"
     hx-trigger="submit"
 >
-    <input type="hidden" name="callType" value="translate">
-
+  <input type="hidden" name="callType" value="translate_content">
+%if ( $TicketObj ) {
+  <input type="hidden" class="hidden" name="id" value="<% $TicketObj->Id %>">
+% }
     <div class="mb-2">
         <label class="form-label small text-muted mb-1">Translate From</label>
          <& /Elements/SelectLang, Name => 'translateFrom', Default => $transFrom &>
@@ -76,4 +78,5 @@ if (RT->Config->Get('MessageBoxRichTextInitArguments')->{language} ) {
 $rawText   => ''
 $transFrom => undef
 $transTo   => 'es'
+$TicketObj => undef
 </%ARGS>

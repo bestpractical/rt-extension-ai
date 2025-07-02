@@ -72,3 +72,35 @@ export function extractParagraphsFromHTML(input) {
 	const paragraphs = Array.from(doc.querySelectorAll('p')).map((p) => p.textContent?.trim() || '');
 	return paragraphs.filter(Boolean).join('\n');
 }
+
+export function getTicketIdFromUrl(url) {
+	try {
+		const urlObject = new URL(url);
+
+		// We only want ids for tickets
+		if (urlObject.pathname.includes("Ticket")) {
+
+			// The URLSearchParams API expects '&' as a separator.
+			// Replace all semicolons with ampersands to ensure correct parsing.
+			// We use slice(1) to remove the leading '?' before replacing.
+			let queryString = urlObject.search;
+			queryString = queryString.slice(1).replace(/;/g, '&');
+
+			const params = new URLSearchParams(queryString);
+
+			if (params.has("id")) {
+				const ticketId = parseInt(params.get("id"), 10);
+
+				if (!isNaN(ticketId)) {
+					return ticketId;
+				} else {
+					console.error("The 'id' parameter is not a valid number.");
+					return null;
+				}
+			}
+		}
+	} catch (error) {
+		console.error("Error parsing the URL:", error);
+		return null;
+	}
+}

@@ -11,16 +11,21 @@ $translateTo    => 'Spanish'
 use JSON;
 
 my $queue = 'Default';
+if ( $ARGS{id} ) {
+    my $TicketObj = LoadTicket($ARGS{id});
+    $queue = $TicketObj->QueueObj->Name;
+}
+
 my $result_payload;
 my $result_text;
 
 my $config = RT->Config->Get('RT_AI_Provider');
-$config = $config->{$queue};
+$config = $config->{$queue} || $config->{Default};
 
 if ($config) {
     my $prompt = $config->{prompts}{$callType};
 
-    if ($callType eq 'translate') {
+    if ($callType eq 'translate_content') {
         $prompt .= " Translate from $translateFrom to $translateTo.";
     }
 
