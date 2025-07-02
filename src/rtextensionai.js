@@ -16,95 +16,95 @@ const aiIcon = `
 import { createSuggestionModal } from './modalUtils.js';
 
 export default class RtExtensionAi extends CKEDITOR.Plugin {
-	static get pluginName() {
-		return 'RtExtensionAi';
-	}
+    static get pluginName() {
+        return 'RtExtensionAi';
+    }
 
-	init() {
-		const editor = this.editor;
-		this.addDropdown(editor);
-		this.addAutoComplete(editor);
-	}
+    init() {
+        const editor = this.editor;
+        this.addDropdown(editor);
+        this.addAutoComplete(editor);
+    }
 
-	/**
-	 * Adds a dropdown with AI suggestions, Adjust Tone, and Translate options.
-	 */
-	addDropdown(editor) {
-		editor.ui.componentFactory.add('aiSuggestion', (locale) => {
-			const dropdownItems = new CKEDITOR.Collection();
+    /**
+     * Adds a dropdown with AI suggestions, Adjust Tone, and Translate options.
+     */
+    addDropdown(editor) {
+        editor.ui.componentFactory.add('aiSuggestion', (locale) => {
+            const dropdownItems = new CKEDITOR.Collection();
 
-			dropdownItems.add(this.createDropdownItem('Adjust Tone/Voice', 'adjust_tone'));
-			dropdownItems.add(this.createDropdownItem('AI Suggestion', 'suggest_response'));
-			dropdownItems.add(this.createDropdownItem('Translate', 'translate_content'));
+            dropdownItems.add(this.createDropdownItem('Adjust Tone/Voice', 'adjust_tone'));
+            dropdownItems.add(this.createDropdownItem('AI Suggestion', 'suggest_response'));
+            dropdownItems.add(this.createDropdownItem('Translate', 'translate_content'));
 
-			const dropdownView = CKEDITOR.createDropdown(locale, CKEDITOR.DropdownButtonView);
+            const dropdownView = CKEDITOR.createDropdown(locale, CKEDITOR.DropdownButtonView);
 
-			CKEDITOR.addListToDropdown(dropdownView, dropdownItems);
+            CKEDITOR.addListToDropdown(dropdownView, dropdownItems);
 
-			dropdownView.buttonView.set({
-				label: 'AI Suggestions',
-				tooltip: true,
-				withText: true,
-				icon: aiIcon
-			});
+            dropdownView.buttonView.set({
+                label: 'AI Suggestions',
+                tooltip: true,
+                withText: true,
+                icon: aiIcon
+            });
 
-			dropdownView.on('execute', async (evt) => {
-				const { id } = evt.source;
-				const { content, isSelected: isSelectedText } = getEditorSelectionOrContent(editor);
+            dropdownView.on('execute', async (evt) => {
+                const { id } = evt.source;
+                const { content, isSelected: isSelectedText } = getEditorSelectionOrContent(editor);
 
-				createSuggestionModal(content, editor, id, isSelectedText);
-			});
+                createSuggestionModal(content, editor, id, isSelectedText);
+            });
 
-			return dropdownView;
-		});
-	}
+            return dropdownView;
+        });
+    }
 
-	/**
-	 * Adds real-time auto-complete functionality triggered by typing.
-	 */
-	addAutoComplete(editor) {
-		let debounceTimeout = null;
-		let isAppending = false;
+    /**
+     * Adds real-time auto-complete functionality triggered by typing.
+     */
+    addAutoComplete(editor) {
+        let debounceTimeout = null;
+        let isAppending = false;
 
-		editor.model.document.on('change:data', () => {
-			clearTimeout(debounceTimeout);
-			debounceTimeout = setTimeout(async () => {
-				if (isAppending) {
-					isAppending = false;
-					return;
-				}
+        editor.model.document.on('change:data', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(async () => {
+                if (isAppending) {
+                    isAppending = false;
+                    return;
+                }
 
-				const text = stripHTML(editor.data.get().trim());
+                const text = stripHTML(editor.data.get().trim());
 
-				if (!text) {
-					return;
-				}
+                if (!text) {
+                    return;
+                }
 
-				try {
-					const suggestion = await fetchAiResults(text, 'autocomplete_text');
+                try {
+                    const suggestion = await fetchAiResults(text, 'autocomplete_text');
 
-					if (suggestion) {
-						showAutocompletePlaceholder(editor, suggestion);
-						isAppending = true;
-					}
-				} catch (error) {
-					console.error('Error during auto-complete:', error);
-				}
-			}, 500);
-		});
-	}
+                    if (suggestion) {
+                        showAutocompletePlaceholder(editor, suggestion);
+                        isAppending = true;
+                    }
+                } catch (error) {
+                    console.error('Error during auto-complete:', error);
+                }
+            }, 500);
+        });
+    }
 
-	/**
-	 * Creates an individual dropdown item.
-	 */
-	createDropdownItem(label, id) {
-		return {
-			type: 'button',
-			model: {
-				label,
-				id,
-				withText: true
-			}
-		};
-	}
+    /**
+     * Creates an individual dropdown item.
+     */
+    createDropdownItem(label, id) {
+        return {
+            type: 'button',
+            model: {
+                label,
+                id,
+                withText: true
+            }
+        };
+    }
 }
