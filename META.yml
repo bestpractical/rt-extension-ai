@@ -1,7 +1,7 @@
 ---
 abstract: 'RT-Extension-AI Extension'
 author:
-  - 'Parag Shah <paragsha@buffalo.edu>'
+  - 'Best Practical Solutions, LLC <modules@bestpractical.com>'
 build_requires:
   ExtUtils::MakeMaker: 6.59
 configure_requires:

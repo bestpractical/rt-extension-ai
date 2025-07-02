@@ -16,84 +16,24 @@ if ( RT->Config->can('RegisterPluginConfig') ) {
     RT->Config->RegisterPluginConfig(
         Plugin  => 'AI',
         Content => [
-            {   Name => 'TicketSummary',
-                Help => 'Prompt to summarize ticket conversation.',
-            },
-            {   Name => 'TicketSentiment',
-                Help => 'Prompt to classify overall sentiment.',
-            },
-            {   Name => 'AdjustTone',
-                Help => 'Prompt to adjust tone for professionalism.',
-            },
-            {   Name => 'AiSuggestion',
-                Help => 'Prompt for providing AI suggestions.',
-            },
-            {   Name => 'Translate',
-                Help =>
-                    'Prompt for translating text using source/target language.',
-            },
-            {   Name => 'Autocomplete',
-                Help => 'Prompt for predicting next three words.',
-            },
-            {   Name => 'GeneralAIModel',
-                Help => 'Configuration for the general-purpose AI model.',
-            },
-            {   Name => 'AutoCompleteModel',
-                Help => 'Configuration for autocomplete-specific AI model.',
-            },
-            {   Name => 'DefaultProvider',
-                Help => 'Default AI provider.',
-            },
-            {   Name => 'AIProviders',
-                Help => 'List of available AI providers and API details.',
+            {   Name => 'RT_AI_Provider',
+                Help => 'Configuration options for adding AI providers to RT.',
             },
         ],
         Meta => {
-            TicketSummary     => { Type => 'SCALAR' },
-            TicketSentiment   => { Type => 'SCALAR' },
-            AdjustTone        => { Type => 'SCALAR' },
-            AiSuggestion      => { Type => 'SCALAR' },
-            Translate         => { Type => 'SCALAR' },
-            Autocomplete      => { Type => 'SCALAR' },
-            GeneralAIModel    => { Type => 'HASH' },
-            AutoCompleteModel => { Type => 'HASH' },
-            DefaultProvider   => { Type => 'SCALAR' },
-            AIProviders       => { Type => 'HASH' },
+            RT_AI_Provider       => { Type => 'HASH' },
         }
     );
 }
 
 =head1 NAME
 
-RT-Extension-AI - AI Features for Request Tracker extension
+RT-Extension-AI - Add various AI Features to Request Tracker
 
 =head1 DESCRIPTION
 
-This RT extension introduces AI-powered features to enhance ticket handling efficiency and improve the user experience in Request Tracker (RT).
-
-=head1 FEATURES
-
-=over 4
-
-=item * Autocomplete
-
-    Suggests the next three words while typing in ticket comments or replies.
-
-=item * AI CKEditor Actions
-
-    - Adjust Tone - rephrase content for professionalism and clarity.
-    - AI Suggestion - generate responses based on user input.
-    - Translate - translate ticket text between languages.
-
-=item * Ticket Sentiment
-
-    Automatically analyzes user replies and categorizes sentiment (Satisfied, Dissatisfied, Neutral).
-
-=item * Ticket Summarization
-
-    Generates a concise summary based on ticket conversation history.
-
-=back
+This RT extension introduces various AI-powered features to RT. AI assistance is
+added via scrips and also interactively through the RT editor.
 
 =head1 RT VERSION
 
@@ -139,125 +79,168 @@ See below for additional configuration details.
 
 =head1 CONFIGURATION
 
-This section outlines the configuration steps to enable the AI functionalities in RT.
+An example configuration file is provided in C<etc/RT_AI_Config.pm>. The
+configuration defines both the details of the service you want to connect to
+and details of the specific features, like prompts for different features. Below
+shows a sample configuration.
 
-=head2 AI Provider Setup
-
-Set the default provider and its config:
-
-    Set($DefaultProvider, 'OpenAI');
-
-    Set(%AIProviders,
-        'OpenAI' => {
+    Set( %RT_AI_Provider,
+          'Default' => {
+            name    => 'OpenAI',
             api_key => 'YOUR_API_KEY',
             timeout => 15,
             url     => 'https://api.openai.com/v1/chat/completions',
-        }
+            default_model => {
+                name   => 'gpt-4',
+                max_token    => 300,
+                temperature => 0.5,
+                stream      => \0
+            },
+            autocomplete_model => {
+                name   => 'gpt-3.5-turbo',
+                max_token    => 20,
+                temperature => 0.7,
+                stream      => \1
+            },
+            prompts => {
+                summarize_ticket => 'You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required.',
+                assess_sentiment => 'Classify the overall sentiment as Satisfied, Dissatisfied, or Neutral. Provide reasoning if possible.',
+                adjust_tone => 'Paraphrase the text for clarity and professionalism. Ensure the tone is polite, concise, and customer-friendly.',
+                suggest_response => 'Provide clear, practical advice or suggestions based on the given question or scenario.',
+                translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
+                autocomplete_text => 'Predict the next three words based on the input text without explanations.',
+            },
+          },
     );
 
-=head2 Model Configuration
+=head2 Global and Queue-specific Configuration
 
-    Set($GeneralAIModel, {
-        modelDetails => {
-            modelName   => 'gpt-4',
-            maxToken    => 300,
-            temperature => 0.5,
-            stream      => \0,
-        }
-    });
+The block of configuration defined for the "Default" key, as shown above, is used
+as the default global settings for your RT. You can also add alternate configuration,
+to define different prompts, for example, by adding new sections with queue names
+as keys. In any context where RT can associate the AI action with a ticket or
+queue, it will load the matching queue configuration, if available.
 
-    Set($AutoCompleteModel, {
-        modelDetails => {
-            modelName   => 'gpt-3.5-turbo',
-            maxToken    => 10,
-            temperature => 0.7,
-            stream      => \1,
-        }
-    });
+=head2 Using Different AI Providers
+
+This extension is designed to work with any AI provider with a REST API. The
+features currently all use the conversation AI feature. To interface with
+a system, you need the REST API URL for the conversation endpoint.
+
+Authentication can be different for different providers and may require some
+custom coding. Most require a token as indicated in the configuration.
+We have tested with the following providers.
+
+=over
+
+=item *
+
+OpenAPI, URL: https://api.openai.com/v1/chat/completions
+
+=item *
+
+Gemini, URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+
+=back
+
+=head2 Models
+
+Some API providers have different models that are optimized for different tasks.
+Currently most AI features use the general model. The autocomplete feature,
+however, requires fast responses, so we provide a way to set a different model
+for that feature. ChatGPT, for example, has a turbo model that is optimized for
+speed and makes the autocomplete work much better.
 
 =head2 Prompts
 
-Define system-level instructions for each AI task:
-
-    Set($TicketSummary, "You are a helpdesk assistant. Summarize the conversation...");
-    Set($TicketSentiment, "Classify the overall sentiment...");
-    Set($AdjustTone,      "Paraphrase the text...");
-    Set($AiSuggestion,    "Provide practical advice...");
-    Set($Translate,       "Translate the text from...");
-    Set($Autocomplete,    "Predict the next three words...");
+You can define different prompts for different AI features. The keys in the
+prompts section describe what they are used for. These prompts are sent with
+every request to the AI for the defined feature. You will likely need to
+experiment with your selected AI to find wording that correctly processes the
+prompt along with the content sent in each request.
 
 =head2 CKEditor Integration
 
-To activate the AI button in rich text editors:
+Some AI features are integrated into RT's editor and are accessible via
+buttons in the editor toolbar. To load the editor features, some additional
+configuration is needed. It is provided in the sample C<etc/RT_AI_Config.pm>
+file and should be loaded automatically when you enable the extension. If
+you don't see the AI button, you can copy the configuration into your local
+site configuration.
 
-    my $messageBoxRichTextInitArguments = RT->Config->Get('MessageBoxRichTextInitArguments');
-    $messageBoxRichTextInitArguments->{extraPlugins} //= [];
-    push @{$messageBoxRichTextInitArguments->{extraPlugins}}, 'RtExtensionAi';
+=head1 FEATURES
 
-    $messageBoxRichTextInitArguments->{toolbar}{items} //= [];
-    push @{$messageBoxRichTextInitArguments->{toolbar}{items}}, 'aiSuggestion';
+=head2 Scrips
 
-=head1 SCRIPS AND CUSTOM FIELDS
+The following scrip actions are provided to update information on tickets
+when configured with whatever conditions you prefer. Sample scrips configured
+with "On Correspond" conditions are installed initially. These are just
+examples and you can use the actions in any new scrips you want to create.
 
-=head2 Installed Custom Fields
+=over
 
-- C<Ticket Summary>
-- C<Ticket Sentiment> (Dropdown: Satisfied, Dissatisfied, Neutral)
+=item Analyze Ticket Sentiment
 
-=head2 Installed Custom Fields
+Content from the ticket is sent to the AI provider and analyzed to assess
+the sentiment of the end user. Responses are Satisfied, Dissatisfied, or Neutral
+and the value is saved in the "Ticket Summary" custom field on the ticket.
 
-=over 4
+=item Generate Ticket Summary
 
-=item * Ticket Summary
-
-=item * Ticket Sentiment (Dropdown: Satisfied, Dissatisfied, Neutral)
-
-=back
-
-=head2 Installed Scrips
-
-=over 4
-
-=item * On Comment or Correspond - Adds a generated summary.
-
-=item * On Correspond - Classifies sentiment and updates the custom field.
+Content from the ticket is sent to the AI provider and a concise summary is
+requested. The result is saved in the "Ticket Sentiment" custom field on the ticket.
 
 =back
 
-=head2 RtExtensionAi
+=head2 Editor Features
 
-A new custom plugin RtExtensionAi was created to handle the AI suggestions and other AI-related features.
-This plugin is integrated with CKEditor to provide a seamless user experience.
+The following features are available in RT's editor.
 
-To enable the plugin, add the following line to your RT_SiteConfig.pm file:
+=over
 
-    Set($MessageBoxRichTextInitArguments, {
-        extraPlugins => ['RtExtensionAi'],
-        toolbar => {
-            items => [ ... 'aiSuggestion' ]
-        }
-    });
+=item Autocomplete
 
+As you type, suggestions are provided for the next few words. The behavior of
+the suggestions can be modified with the prompt.
+
+=item Adjust Tone
+
+You can submit a block of text to your AI provider and ask it to change the
+tone to something different.
+
+=item AI Suggestion
+
+Your AI provider can suggest a response to the current question on the ticket.
+
+=item Translate
+
+Translate the provided content from the current language to another selected
+language.
+
+=back
+
+=head1 DEVELOPER
+
+=head2 CKEditor Plugin RtExtensionAi
+
+A new custom CKEditor plugin RtExtensionAi provides the AI integration with the
+RT editor.
 
 =head2 Updating the plugin
 
-The plugin uses Vite to build the assets. Information on working with CKEditor plugins can be 
-found on their website, a good place to start is here:
-
-L<https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html>
-
-
-=item BUILDING THE JS PLUGIN
+The plugin uses Vite to build the assets loaded into RT. Information on working
+with CKEditor plugins can be found on the L<CKEditor website|https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html>.
 
 We use Vite to build the CKEditor plugin.
 
     npm install
     npm run build
 
-For more details: https://ckeditor.com/docs/ckeditor5/latest/framework/tutorials/creating-simple-plugin-timestamp.html
-
-
 =head1 AUTHOR
+
+Best Practical Solutions, LLC E<lt>modules@bestpractical.comE<gt>
+
+=head2 Initial Prototype
 
 Parag Shah E<lt>paragsha@buffalo.eduE<gt>
 
@@ -269,23 +252,15 @@ Ayush Goel E<lt>ayushgoe@buffalo.eduE<gt>
 
 Shivan Mathur E<lt>shivanmthr18@gmail.comE<gt>
 
-Best Practical Solutions, LLC E<lt>modules@bestpractical.comE<gt>
+=head1 BUGS
 
+All bugs should be reported via email to: L<bug-RT-Extension-AI@rt.cpan.org|mailto:bug-RT-Extension-AI@rt.cpan.org>
 
-=for html <p>All bugs should be reported via email to <a
-href="mailto:bug-RT-Extension-PagerDuty@rt.cpan.org">bug-RT-Extension-PagerDuty@rt.cpan.org</a>
-or via the web at <a
-href="http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-PagerDuty">rt.cpan.org</a>.</p>
+Or via the web at: L<rt.cpan.org|http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-AI>.
 
-=for text
-    All bugs should be reported via email to
-        bug-RT-Extension-PagerDuty@rt.cpan.org
-    or via the web at
-        E<lt>Page linkE<gt>
+=head1 COPYRIGHT
 
-=head1 LICENSE AND COPYRIGHT
-
-This software is Copyright (c) 2025 by BPS
+This extension is Copyright (C) 2013-2024 Best Practical Solutions, LLC.
 
 This is free software, licensed under:
 
