@@ -1,6 +1,6 @@
 export async function fetchAiResults(inputText, optionType) {
 	try {
-		const response = await fetch('/Helpers/AISuggestion/process', {
+		const response = await fetch('/Helpers/AISuggestion/ProcessAIRequest', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: new URLSearchParams({ rawText: inputText, callType: optionType }).toString()
