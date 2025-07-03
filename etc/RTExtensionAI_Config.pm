@@ -40,7 +40,15 @@ my $messageBoxRichTextInitArguments
 $messageBoxRichTextInitArguments->{extraPlugins} //= [];
 push @{ $messageBoxRichTextInitArguments->{extraPlugins} }, 'RtExtensionAi';
 
-# Add 'aiSuggestion' to the toolbar, creating a new array
-$messageBoxRichTextInitArguments->{toolbar} //= [];
-$messageBoxRichTextInitArguments->{toolbar}
-    = [ @{ $messageBoxRichTextInitArguments->{toolbar} }, 'aiSuggestion' ];
+# Add 'aiSuggestion' to the toolbar before sourceEditing
+my @temp_toolbar;
+foreach my $item ( @{$messageBoxRichTextInitArguments->{toolbar}} ){
+    if ( $item eq 'sourceEditing' ) {
+        push @temp_toolbar, 'aiSuggestion', 'sourceEditing';
+    }
+    else {
+        push @temp_toolbar, $item;
+    }
+}
+
+@{$messageBoxRichTextInitArguments->{toolbar}} = @temp_toolbar;

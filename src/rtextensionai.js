@@ -42,10 +42,9 @@ export default class RtExtensionAi extends CKEDITOR.Plugin {
             CKEDITOR.addListToDropdown(dropdownView, dropdownItems);
 
             dropdownView.buttonView.set({
-                label: 'AI Suggestions',
+                label: 'AI Assist',
                 tooltip: true,
-                withText: true,
-                icon: aiIcon
+                withText: true
             });
 
             dropdownView.on('execute', async (evt) => {
