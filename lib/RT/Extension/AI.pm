@@ -172,10 +172,26 @@ site configuration.
 
 =head2 Scrips
 
-The following scrip actions are provided to update information on tickets
-when configured with whatever conditions you prefer. Sample scrips configured
-with "On Correspond" conditions are installed initially. These are just
+The following scrips are provided to update information on tickets
+when configured with whatever conditions you prefer. The sample scrips are
+configured with "On Correspond" conditions. These are just
 examples and you can use the actions in any new scrips you want to create.
+
+These scrips are applied globally as part of the installation. If you are just
+testing, you may want to update the scrips and limit them to just one queue.
+
+=over
+
+=item On Correspond Summarize Ticket History
+
+=item On Correspond Assess Reply Sentiment
+
+=back
+
+=head3 Scrip Actions
+
+The actions below are included with the extension and can be used with
+any conditions to create scrips that make sense for your system.
 
 =over
 

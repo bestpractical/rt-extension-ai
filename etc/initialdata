@@ -20,14 +20,6 @@ push @CustomFields,
     ],
     };
 
-@ScripConditions = (
-    {   Name                 => 'On comment or On Correspond',
-        Description          => 'When someone replies or comments on ticket',
-        ApplicableTransTypes => 'Correspond,Comment',
-        ExecModule           => 'AnyTransaction'
-    },
-);
-
 @ScripActions = (
     {   Name        => 'Generate Ticket Summary',
         Description =>
@@ -42,12 +34,12 @@ push @CustomFields,
 );
 
 @Scrips = (
-    {   Description    => 'On Comment or Reply Add Summary',
-        ScripCondition => 'On comment or On Correspond',
+    {   Description    => 'On Correspond Summarize Ticket History',
+        ScripCondition => 'On Correspond',
         ScripAction    => 'Generate Ticket Summary',
         Template       => 'Blank'
     },
-    {   Description    => 'Add Sentiment On Correspond',
+    {   Description    => 'On Correspond Assess Reply Sentiment',
         ScripCondition => 'On Correspond',
         ScripAction    => 'Analyze Ticket Sentiment',
         Template       => 'Blank'
