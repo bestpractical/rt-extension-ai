@@ -1,4 +1,4 @@
-import { fetchAiResults, getEditorSelectionOrContent, stripHTML } from './aiUtils.js';
+import { fetchAiResults, getEditorSelectionOrContent, stripHTML, isAIEditorPage } from './aiUtils.js';
 import { showAutocompletePlaceholder } from './suggestion.js';
 
 const aiIcon = `
@@ -22,8 +22,11 @@ export default class RtExtensionAi extends CKEDITOR.Plugin {
 
     init() {
         const editor = this.editor;
-        this.addDropdown(editor);
-        this.addAutoComplete(editor);
+
+        if ( isAIEditorPage() ) {
+            this.addDropdown(editor);
+            this.addAutoComplete(editor);
+        }
     }
 
     /**

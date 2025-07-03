@@ -104,3 +104,17 @@ export function getTicketIdFromUrl(url) {
         return null;
     }
 }
+
+export function isAIEditorPage() {
+    const currentUrl = window.location.href;
+
+    // Todo: Make this configuration
+    const isEditorPage = currentUrl.includes("Ticket/Update.html") || currentUrl.includes("Ticket/Create.html");
+
+    if (isEditorPage) {
+        console.log("Success: The URL contains 'Ticket/Update.html'.");
+        return 1;
+    } else {
+        return 0;
+    }
+}
