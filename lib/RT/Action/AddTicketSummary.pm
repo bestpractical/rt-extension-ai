@@ -18,6 +18,9 @@ sub Commit {
     my $ticket_id = $ticket->id;
 
     my $transactions = $ticket->Transactions;
+
+    $transactions->Limit( FIELD => 'Type', OPERATION => '=', VALUE => 'Correspond' );
+
     my $conversation = '';
     my $max_chars    = 3000;
 
@@ -25,13 +28,11 @@ sub Commit {
         my $content = $txn->Content;
         next unless $content;
 
-        if ( $txn->Type eq 'Correspond' ) {
-            $conversation .= "User: $content\n";
-        } elsif ( $txn->Type eq 'Comment' ) {
-            $conversation .= "Staff: $content\n";
-        } else {
-            $conversation .= "$content\n";
-        }
+        # TODO: identify privileged vs. unprivileged users
+        # TODO: make $max_chars configurable
+
+        $conversation .= "User: " . $txn->CreatorObj->Name . " ";
+        $conversation .= "Reply: " . $content . "\n";
 
         last if length($conversation) > $max_chars;
     }
