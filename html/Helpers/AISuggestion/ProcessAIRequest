@@ -53,8 +53,8 @@ if ($config) {
     $result_text = $result_payload->{result} || '';
 }
 else {
-    $result_text = "Configuration for queue $queue not found.";
-    RT->Logger->error($result_text);
+    $result_text = '';
+    RT->Logger->debug("Configuration for queue $queue not found.");
 }
 
 </%INIT>

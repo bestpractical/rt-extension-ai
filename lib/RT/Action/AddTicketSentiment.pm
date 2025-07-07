@@ -38,6 +38,8 @@ sub Commit {
     my $config = RT->Config->Get('RT_AI_Provider');
     $config = $config->{$queue} || $config->{Default};
 
+    return 1 unless $config;
+
     my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
     my $provider = $provider_class->new(config => $config);
 

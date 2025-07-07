@@ -108,11 +108,12 @@ export function getTicketIdFromUrl(url) {
 export function isAIEditorPage() {
     const currentUrl = window.location.href;
 
+    const showAIFeatures = window.RT_AI_ActiveForCurrentQueue;
+
     // Todo: Make this configuration
     const isEditorPage = currentUrl.includes("Ticket/Update.html") || currentUrl.includes("Ticket/Create.html");
 
-    if (isEditorPage) {
-        console.log("Success: The URL contains 'Ticket/Update.html'.");
+    if (showAIFeatures && isEditorPage) {
         return 1;
     } else {
         return 0;

@@ -116,10 +116,16 @@ shows a sample configuration.
 =head2 Global and Queue-specific Configuration
 
 The block of configuration defined for the "Default" key, as shown above, is used
-as the default global settings for your RT. You can also add alternate configuration,
-to define different prompts, for example, by adding new sections with queue names
-as keys. In any context where RT can associate the AI action with a ticket or
-queue, it will load the matching queue configuration, if available.
+as the default global settings for your RT. You can define per-queue configuration
+by adding sections with queue names as keys. In any context where RT can associate
+the AI action with a ticket or queue, it will load the matching queue
+configuration, if available.
+
+Some features, like the editor autocomplete, may call the AI service many times. To
+limit AI features to selected queues only, do not provide a C<Default> configuration
+and only add configuration for the queues you want. The AI menu in the editor
+will only appear for configured queues and autocomplete will also run only for
+configured queues.
 
 =head2 Using Different AI Providers
 
