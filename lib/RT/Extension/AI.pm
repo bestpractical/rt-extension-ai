@@ -91,16 +91,14 @@ shows a sample configuration.
             timeout => 15,
             url     => 'https://api.openai.com/v1/chat/completions',
             default_model => {
-                name   => 'gpt-4',
-                max_token    => 300,
+                name        => 'gpt-4',
+                max_tokens  => 300,
                 temperature => 0.5,
-                stream      => \0
             },
             autocomplete_model => {
-                name   => 'gpt-3.5-turbo',
-                max_token    => 20,
+                name        => 'gpt-3.5-turbo',
+                max_tokens  => 20,
                 temperature => 0.7,
-                stream      => \1
             },
             prompts => {
                 summarize_ticket => 'You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required.',

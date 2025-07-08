@@ -9,18 +9,6 @@ Set( %RT_AI_Provider,
          api_key => 'YOUR_API_KEY',
          timeout => 15,
          url     => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-         default_model => {
-            name   => 'gpt-4',
-            max_token    => 300,
-            temperature => 0.5,
-            stream      => \0
-         },
-         autocomplete_model => {
-            name   => 'gpt-3.5-turbo',
-            max_token    => 20,
-            temperature => 0.7,
-            stream      => \1
-         },
          prompts => {
             summarize_ticket => 'You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required.',
             assess_sentiment => 'Classify the overall sentiment as Satisfied, Dissatisfied, or Neutral. Provide reasoning if possible.',

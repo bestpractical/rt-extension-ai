@@ -17,7 +17,7 @@ sub process_request {
             { role => 'system', content => $args{prompt} },
             { role => 'user',   content => $args{raw_text} },
         ],
-        max_tokens  => $args{model_config}->{max_token},
+        max_tokens  => $args{model_config}->{max_tokens},
         temperature => $args{model_config}->{temperature},
     };
 
