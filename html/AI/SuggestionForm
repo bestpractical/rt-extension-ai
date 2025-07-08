@@ -22,7 +22,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="ai-result" class="form-label">AI Response</label>
+        <label for="ai-result" class="form-label"><&|/l&>AI Response</&></label>
         <div
             id="ai-result"
             name="ai-result"
@@ -37,7 +37,7 @@
 
     <div class="d-flex justify-content-end gap-2">
 
-        <button type="submit" class="btn btn-primary">Generate</button>
+        <button type="submit" class="btn btn-primary"><&|/l&>Generate</&></button>
 
         <button
             name="done-button"

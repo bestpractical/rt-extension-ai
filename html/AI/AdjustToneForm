@@ -22,7 +22,7 @@
   </div>
 
   <div class="mb-3">
-    <label for="adjustToneType" class="form-label">Adjustment Type</label>
+    <label for="adjustToneType" class="form-label"><&|/l&>Adjustment Type</&></label>
     <select id="adjustToneType" name="adjustToneType" class="form-select">
       <option value="formal">Formal</option>
       <option value="casual">Casual</option>
@@ -32,7 +32,7 @@
   </div>
 
   <div class="mb-3">
-    <label for="ai-result" class="form-label">AI Response:</label>
+    <label for="ai-result" class="form-label"><&|/l&>AI Response</&></label>
     <div
       id="ai-result"
       name="ai-result"
@@ -46,7 +46,7 @@
       <& /Widgets/Spinner &>
     </div>
 
-    <button type="submit" class="btn btn-primary">Generate</button>
+    <button type="submit" class="btn btn-primary"><&|/l&>Generate</&></button>
 
     <button
       type="button"

@@ -11,7 +11,7 @@
   <input type="hidden" class="hidden" name="id" value="<% $TicketObj->Id %>">
 % }
     <div class="mb-2">
-        <label class="form-label small text-muted mb-1">Translate From</label>
+        <label class="form-label small text-muted mb-1"><&|/l&>Translate From</&></label>
          <& /Elements/SelectLang, Name => 'translateFrom', Default => $transFrom &>
     </div>
 
@@ -25,13 +25,13 @@
     </div>
 
     <div class="mb-2">
-        <label class="form-label small text-muted mb-1">Translate To</label>
+        <label class="form-label small text-muted mb-1"><&|/l&>Translate To</&></label>
         <& /Elements/SelectLang, Name => 'translateTo', Default => $transTo &>
 
     </div>
 
     <div class="mb-3">
-        <label class="form-label small text-muted mb-1">AI Response</label>
+        <label class="form-label small text-muted mb-1"><&|/l&>AI Response</&></label>
         <div
             id="ai-result"
             name="ai-result"
@@ -54,7 +54,7 @@
             hx-target="#ai-result"
             hx-indicator="#spinner"
         >
-            Generate
+            <&|/l&>Generate</&>
         </button>
 
         <button
