@@ -54,6 +54,7 @@ sub Commit {
     my $response = $provider->process_request(
         prompt       => $config->{prompts}{summarize_ticket},
         raw_text     => $conversation,
+        model_config => $config->{default_model},
     );
 
     unless ( $response->{success} ) {

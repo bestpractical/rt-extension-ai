@@ -35,6 +35,7 @@ if ($config) {
     my $response = $provider_instance->process_request(
         prompt       => $prompt,
         raw_text     => $rawText,
+        model_config => $callType eq 'autocomplete_text' ? $config->{autocomplete_model} : $config->{default_model},
     );
 
     if ( $response->{success} ) {

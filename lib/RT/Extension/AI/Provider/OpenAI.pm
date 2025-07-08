@@ -12,12 +12,12 @@ sub process_request {
     my $ua = $self->{ua};
 
     my $request_payload = {
-        model    => $args{model_config}->{modelName},
+        model    => $args{model_config}->{name},
         messages => [
             { role => 'system', content => $args{prompt} },
             { role => 'user',   content => $args{raw_text} },
         ],
-        max_tokens  => $args{model_config}->{maxToken},
+        max_tokens  => $args{model_config}->{max_token},
         temperature => $args{model_config}->{temperature},
     };
 
