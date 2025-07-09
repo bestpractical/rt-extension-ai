@@ -2,7 +2,6 @@ import { extractParagraphsFromHTML, getTicketIdFromUrl } from './aiUtils.js';
 
 export class ModalManager {
     constructor() {
-        this.overlay = null;
         this.modalInstance = null;
         this.modalElement = null;
 
@@ -33,11 +32,6 @@ export class ModalManager {
         }
 
         try {
-            if (!this.overlay) {
-                this.overlay = this.createOverlay();
-                document.body.appendChild(this.overlay);
-            }
-
             this.closeExistingModal();
 
             const tempDiv = document.createElement('div');
@@ -118,7 +112,7 @@ export class ModalManager {
     }
 
     /**
-     * Closes the modal and removes the overlay.
+     * Closes the modal
      */
     close() {
         try {
@@ -148,19 +142,6 @@ export class ModalManager {
             document.body.style.removeProperty('padding-right');
             document.body.style.removeProperty('overflow');
         }
-    }
-
-    /**
-     * Creates the modal overlay and container structure.
-     * @returns {HTMLElement} The modal overlay element.
-     */
-    createOverlay() {
-        // Create a container div that will hold our modal without interfering with Bootstrap
-        const overlay = document.createElement('div');
-        overlay.classList.add('modal-overlay');
-        overlay.style.display = 'none';
-
-        return overlay;
     }
 }
 
