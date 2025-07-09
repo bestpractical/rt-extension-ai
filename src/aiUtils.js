@@ -103,6 +103,7 @@ export function getTicketIdFromUrl(url) {
         console.error("Error parsing the URL:", error);
         return null;
     }
+    return null;
 }
 
 export function isAIEditorPage() {
