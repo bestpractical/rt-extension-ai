@@ -1,6 +1,5 @@
 .gitignore
 Changes
-etc/AI_Config.pm
 etc/initialdata
 etc/RTExtensionAI_Config.pm
 html/AI/AdjustToneForm
@@ -10,8 +9,6 @@ html/AI/TranslateForm
 html/Callbacks/RT-Extension-AI/Ticket/Create.html/FormStart
 html/Callbacks/RT-Extension-AI/Ticket/Update.html/FormStart
 html/Elements/AIJavascriptConfig
-html/Helpers/AISuggestion/modal
-html/Helpers/AISuggestion/process
 html/Helpers/AISuggestion/ProcessAIRequest
 html/Helpers/AISuggestion/ShowModal
 inc/Module/Install.pm
@@ -33,11 +30,6 @@ lib/RT/Extension/AI.pm
 lib/RT/Extension/AI/Provider.pm
 lib/RT/Extension/AI/Provider/Gemini.pm
 lib/RT/Extension/AI/Provider/OpenAI.pm
-lib/RT/Extension/AI/Providers/Factory.pm
-lib/RT/Extension/AI/Providers/Gemini.pm
-lib/RT/Extension/AI/Providers/OpenAI.pm
-lib/RT/Extension/AI/Providers/Provider.pm
-lib/RT/Extension/AI/Utils.pm
 Makefile
 Makefile.PL
 MANIFEST			This list of files
@@ -48,7 +40,6 @@ MYMETA.json
 MYMETA.yml
 package-lock.json
 package.json
-pm_to_blib
 README
 src/aiUtils.js
 src/index.js
