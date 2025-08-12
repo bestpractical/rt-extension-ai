@@ -1,10 +1,23 @@
 export async function fetchAiResults(inputText, optionType) {
     try {
-        const response = await fetch(RT.Config.WebHomePath + '/Helpers/AISuggestion/ProcessAIRequest', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ rawText: inputText, callType: optionType, id: getTicketIdFromUrl(window.location.href) }).toString()
-        });
+        // Can be null on create ticket page
+        const ticketId = getTicketIdFromUrl(window.location.href);
+
+        const response = await fetch(
+            RT.Config.WebHomePath + "/Helpers/AISuggestion/ProcessAIRequest",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+
+                // Prepare request parameters, including ticket id if available.
+                // Avoid encoding null here because this call would coerce null to "null".
+                body: new URLSearchParams({
+                    rawText: inputText,
+                    callType: optionType,
+                    ...(ticketId && { id: ticketId }),
+                }).toString(),
+            },
+        );
 
         if (!response.ok) {
             console.error('Error in fetchAiResults:', response.status, response.statusText);
