@@ -1,5 +1,14 @@
 <script>
     window.RT_AI_ActiveForCurrentQueue = <% $AI_Active %>;
+    if ( window.RT_AI_ActiveForCurrentQueue ) {
+        RT.Config.MessageBoxRichTextInitArguments = structuredClone(RT.Config.OriginalMessageBoxRichTextInitArguments);
+    }
+    else if ( RT.Config.MessageBoxRichTextInitArguments.toolbar.items ) {
+        RT.Config.MessageBoxRichTextInitArguments.toolbar.items = RT.Config.MessageBoxRichTextInitArguments.toolbar.items.filter(item => item != 'aiSuggestion');
+    }
+    else {
+        RT.Config.MessageBoxRichTextInitArguments.toolbar = RT.Config.MessageBoxRichTextInitArguments.toolbar.filter(item => item != 'aiSuggestion');
+    }
 </script>
 <%init>
 my $config = RT->Config->Get('RT_AI_Provider');
