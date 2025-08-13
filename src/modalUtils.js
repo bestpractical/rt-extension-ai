@@ -251,12 +251,17 @@ export async function createSuggestionModal(
         let modalHtml;
         // Can be null on create ticket page
         const ticketId = getTicketIdFromUrl(window.location.href);
+        let queueId;
+        if ( !ticketId ) {
+            queueId = document.querySelector('#ai-queue')?.getAttribute('data-id');
+        }
 
         try {
             modalHtml = await loadModalContent(RT.Config.WebHomePath + '/Helpers/AISuggestion/ShowModal', {
                 rawText: editorContent,
                 callType,
-                ...(ticketId && { TicketId: ticketId })
+                ...(ticketId && { TicketId: ticketId }),
+                ...(queueId && { QueueId: queueId })
             });
         } catch (error) {
             console.error('Failed to load modal content:', error);

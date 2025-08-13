@@ -2,6 +2,10 @@ export async function fetchAiResults(inputText, optionType) {
     try {
         // Can be null on create ticket page
         const ticketId = getTicketIdFromUrl(window.location.href);
+        let queueId;
+        if ( !ticketId ) {
+            queueId = document.querySelector('#ai-queue')?.getAttribute('data-id');
+        }
 
         const response = await fetch(
             RT.Config.WebHomePath + "/Helpers/AISuggestion/ProcessAIRequest",
@@ -15,6 +19,7 @@ export async function fetchAiResults(inputText, optionType) {
                     rawText: inputText,
                     callType: optionType,
                     ...(ticketId && { id: ticketId }),
+                    ...(queueId && { QueueId: queueId })
                 }).toString(),
             },
         );
