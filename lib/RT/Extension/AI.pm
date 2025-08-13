@@ -99,6 +99,7 @@ Here is a sample configuration with Gemini:
                 translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
                 autocomplete_text => 'Predict the next three words based on the input text without explanations.',
              },
+             editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
           },
     );
 
@@ -128,6 +129,7 @@ Below shows a sample configuration with OpenAI:
                 translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
                 autocomplete_text => 'Predict the next three words based on the input text without explanations.',
             },
+            editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
           },
     );
 
