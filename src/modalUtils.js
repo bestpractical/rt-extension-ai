@@ -249,11 +249,14 @@ export async function createSuggestionModal(
 
         const savedSelection = saveEditorSelection(editor);
         let modalHtml;
+        // Can be null on create ticket page
+        const ticketId = getTicketIdFromUrl(window.location.href);
+
         try {
             modalHtml = await loadModalContent(RT.Config.WebHomePath + '/Helpers/AISuggestion/ShowModal', {
                 rawText: editorContent,
                 callType,
-                TicketId: getTicketIdFromUrl(window.location.href)
+                ...(ticketId && { TicketId: ticketId })
             });
         } catch (error) {
             console.error('Failed to load modal content:', error);
