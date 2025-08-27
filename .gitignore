@@ -13,3 +13,5 @@ pod2htm*.tmp
 /t/tmp
 /xt/tmp
 node_modules
+bin/rt-build-context-files
+*.txt
