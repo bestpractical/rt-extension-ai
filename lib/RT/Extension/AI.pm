@@ -26,6 +26,107 @@ if ( RT->Config->can('RegisterPluginConfig') ) {
     );
 }
 
+=head2 GenerateTicketSummary
+
+Generate a formatted summary of ticket conversations for AI processing. This function
+extracts Create and Correspond transactions from a ticket and formats them using
+XML-like tags similar to the context file format.
+
+=cut
+
+sub GenerateTicketSummary {
+    my %args = @_;
+    my $ticket = $args{TicketObj} or return '';
+    my $type = $args{TransactionType} || 'Correspond';
+    my $include_create = defined $args{IncludeCreate} ? $args{IncludeCreate} : 1;
+
+    # Get transactions of the specified type, plus Create for initial request if requested
+    my $transactions = $ticket->Transactions;
+    if ($include_create) {
+        $transactions->Limit(FIELD => 'Type', VALUE => 'Create', OPERATOR => '=');
+        if ($type ne 'Create') {
+            $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=', ENTRYAGGREGATOR => 'OR');
+        }
+    } else {
+        $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=');
+    }
+    $transactions->OrderBy(FIELD => 'Created', ORDER => 'ASC');
+
+    my $conversation = '';
+    my $sequence = 1;
+
+    # Track users for anonymization
+    my %user_map = ();
+    my $user_counter = 1;
+
+    while (my $txn = $transactions->Next) {
+        my $creator_id = $txn->CreatorObj->Id;
+        my $creator = $txn->CreatorObj;
+        my $content = $txn->Content || '';
+
+        # Skip empty content
+        next unless $content;
+
+        # Create anonymous user mapping with privilege info
+        unless (exists $user_map{$creator_id}) {
+            my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
+            $user_map{$creator_id} = {
+                name => "User$user_counter",
+                privileged => $privilege_type
+            };
+            $user_counter++;
+        }
+
+        my $user_info = $user_map{$creator_id};
+
+        # Clean up the content (remove RT's standard headers, etc.)
+        $content = CleanTransactionContent($content);
+
+        if ($content) {
+            my $message_type = $txn->Type eq 'Create' ? 'InitialRequest' : 'Message';
+            $conversation .= sprintf "<%s user=\"%s\" privilege=\"%s\" sequence=\"%d\">%s</%s>\n",
+                $message_type,
+                $user_info->{name},
+                $user_info->{privileged},
+                $sequence,
+                $content,
+                $message_type;
+            $sequence++;
+        }
+    }
+
+    return $conversation;
+}
+
+=head2 CleanTransactionContent
+
+Clean up transaction content by removing RT email headers, signatures, and excessive
+whitespace. Also escapes XML characters for safe inclusion in XML output.
+
+=cut
+
+sub CleanTransactionContent {
+    my $content = shift;
+    return '' unless $content;
+
+    # Remove common RT email headers and signatures
+    $content =~ s/^>.*$//gm;  # Remove quoted lines starting with >
+    $content =~ s/^On.*wrote:.*$//gm;  # Remove "On ... wrote:" lines
+    $content =~ s/^\s*--\s*\n.*$//ms;  # Remove signature blocks starting with --
+
+    # Remove excessive whitespace
+    $content =~ s/\n\s*\n/\n\n/g;  # Normalize multiple blank lines to double newlines
+    $content =~ s/^\s+//;  # Remove leading whitespace
+    $content =~ s/\s+$//;  # Remove trailing whitespace
+
+    # Escape XML characters
+    $content =~ s/&/&amp;/g;
+    $content =~ s/</&lt;/g;
+    $content =~ s/>/&gt;/g;
+
+    return $content;
+}
+
 =head2 LoadContextFile
 
 Load and return the contents of a context file for AI processing. This function
