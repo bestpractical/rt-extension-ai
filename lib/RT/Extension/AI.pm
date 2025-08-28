@@ -39,27 +39,53 @@ sub GenerateTicketSummary {
     my $ticket = $args{TicketObj} or return '';
     my $type = $args{TransactionType} || 'Correspond';
     my $include_create = defined $args{IncludeCreate} ? $args{IncludeCreate} : 1;
+    my $transaction_limit = 20; # Maximum number of transactions to include (excluding Create)
 
-    # Get transactions of the specified type, plus Create for initial request if requested
-    my $transactions = $ticket->Transactions;
+    # Get Create transaction separately if requested
+    my $create_transaction = '';
     if ($include_create) {
-        $transactions->Limit(FIELD => 'Type', VALUE => 'Create', OPERATOR => '=');
-        if ($type ne 'Create') {
-            $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=', ENTRYAGGREGATOR => 'OR');
+        my $create_txns = $ticket->Transactions;
+        $create_txns->Limit(FIELD => 'Type', VALUE => 'Create', OPERATOR => '=');
+        $create_txns->OrderBy(FIELD => 'Created', ORDER => 'ASC');
+        if (my $create_txn = $create_txns->First) {
+            my $content = $create_txn->Content || '';
+            $content = CleanTransactionContent($content);
+            if ($content) {
+                my $creator_id = $create_txn->CreatorObj->Id;
+                my $creator = $create_txn->CreatorObj;
+                my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
+                $create_transaction = sprintf "<InitialRequest user=\"User1\" privilege=\"%s\" sequence=\"1\">%s</InitialRequest>\n",
+                    $privilege_type, $content;
+            }
         }
-    } else {
-        $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=');
     }
-    $transactions->OrderBy(FIELD => 'Created', ORDER => 'ASC');
+
+    # Get the most recent transactions of the specified type (limit 20)
+    my $transactions = $ticket->Transactions;
+    if ($type ne 'Create') {
+        $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=');
+    } else {
+        # If only Create is requested and already handled above, return early
+        return $create_transaction;
+    }
+    $transactions->OrderBy(FIELD => 'Created', ORDER => 'DESC');
+    $transactions->RowsPerPage($transaction_limit);
+
+    # Collect transactions in reverse order (most recent first) then reverse for chronological
+    my @txn_list = ();
+    while (my $txn = $transactions->Next) {
+        push @txn_list, $txn;
+    }
+    @txn_list = reverse @txn_list; # Now in chronological order (oldest first)
 
     my $conversation = '';
-    my $sequence = 1;
+    my $sequence = $include_create ? 2 : 1; # Start at 2 if Create transaction exists
 
-    # Track users for anonymization
+    # Track users for anonymization (reserve User1 for Create if it exists)
     my %user_map = ();
-    my $user_counter = 1;
+    my $user_counter = $include_create ? 2 : 1;
 
-    while (my $txn = $transactions->Next) {
+    for my $txn (@txn_list) {
         my $creator_id = $txn->CreatorObj->Id;
         my $creator = $txn->CreatorObj;
         my $content = $txn->Content || '';
@@ -83,19 +109,16 @@ sub GenerateTicketSummary {
         $content = CleanTransactionContent($content);
 
         if ($content) {
-            my $message_type = $txn->Type eq 'Create' ? 'InitialRequest' : 'Message';
-            $conversation .= sprintf "<%s user=\"%s\" privilege=\"%s\" sequence=\"%d\">%s</%s>\n",
-                $message_type,
+            $conversation .= sprintf "<Message user=\"%s\" privilege=\"%s\" sequence=\"%d\">%s</Message>\n",
                 $user_info->{name},
                 $user_info->{privileged},
                 $sequence,
-                $content,
-                $message_type;
+                $content;
             $sequence++;
         }
     }
 
-    return $conversation;
+    return $create_transaction . $conversation;
 }
 
 =head2 CleanTransactionContent
