@@ -34,11 +34,26 @@ if ($config) {
         $prompt .= " Translate from $translateFrom to $translateTo.";
     }
 
+    # Load context file for suggest_response requests
+    my $context_content = '';
+    if ($callType eq 'suggest_response') {
+        my $context = RT::Extension::AI::LoadContextFile(
+            config => $config,
+            queue => $queue
+        );
+
+        if ($context) {
+            my $prompt_text = $config->{suggest_response_context_prompt} || "Here are examples of similar previous conversations for context:";
+            $context_content = "\n\n" . $prompt_text . "\n\n" . $context . "\n\n---\n\nCurrent ticket requiring response:";
+            RT->Logger->debug("Added context file content for suggest_response (length: " . length($context) . ")");
+        }
+    }
+
     my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
     my $provider_instance = $provider_class->new(config => $config);
 
     my $response = $provider_instance->process_request(
-        prompt       => $prompt,
+        prompt       => $prompt . $context_content,
         raw_text     => $rawText,
         model_config => $callType eq 'autocomplete_text' ? $config->{autocomplete_model} : $config->{default_model},
     );

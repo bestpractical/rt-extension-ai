@@ -18,6 +18,9 @@ Set( %RT_AI_Provider,
             autocomplete_text => 'Predict the next three words based on the input text without explanations.',
          },
          editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
+         use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
+         context_file_path => "$RT::BasePath/var/ai_context",  # Directory containing context files
+         suggest_response_context_prompt => "Context: The following are conversation histories from similar support tickets. Use these examples to understand typical support ticket patterns, effective troubleshooting approaches, ways to ask for more information, and the standard corporate tone and voice. Each <Ticket> contains chronological messages between end users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",  # Text that introduces the context for suggest_response
       },
 );
 
