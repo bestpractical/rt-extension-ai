@@ -414,6 +414,10 @@ file and should be loaded automatically when you enable the extension. If
 you don't see the AI button, you can copy the configuration into your local
 site configuration.
 
+The AI Suggestion feature works directly within the editor, inserting responses
+at the end of existing content rather than replacing it. This allows users to
+quote parts of incoming messages and have AI suggestions appended appropriately.
+
 =head1 FEATURES
 
 =head2 Scrips
@@ -473,6 +477,8 @@ tone to something different.
 =item AI Suggestion
 
 Your AI provider can suggest a response to the current question on the ticket.
+The AI response is inserted directly into the editor at the end of any existing
+content, preserving paragraph structure and newlines.
 
 =item Translate
 
