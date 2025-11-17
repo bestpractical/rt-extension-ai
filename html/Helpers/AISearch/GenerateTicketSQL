@@ -1,0 +1,127 @@
+% $m->out( $result_text );
+% $m->abort();
+
+<%ARGS>
+$naturalLanguageQuery => ''
+</%ARGS>
+<%INIT>
+use JSON;
+
+my $result_text = '';
+
+# Get the AI provider configuration
+my $all_configs = RT->Config->Get('RT_AI_Provider');
+my $config;
+my $config_name;
+
+# First, try to find 'Default' configuration
+if ($all_configs->{Default}) {
+    $config = $all_configs->{Default};
+    $config_name = 'Default';
+    RT->Logger->debug("Using 'Default' AI provider configuration");
+}
+
+# If no Default, search for any configuration with generate_ticketsql prompt
+unless ($config) {
+    for my $name (keys %$all_configs) {
+        if ($all_configs->{$name}{prompts} && $all_configs->{$name}{prompts}{generate_ticketsql}) {
+            $config = $all_configs->{$name};
+            $config_name = $name;
+            RT->Logger->debug("Using '$name' AI provider configuration (first found with generate_ticketsql)");
+            last;
+        }
+    }
+}
+
+unless ($config) {
+    RT->Logger->error("No AI provider configuration found with generate_ticketsql prompt");
+    $m->out("Error: AI provider not configured");
+    $m->abort();
+}
+
+# Check if we have a prompt for generate_ticketsql
+my $prompt = $config->{prompts}{generate_ticketsql};
+unless ($prompt) {
+    RT->Logger->error("No generate_ticketsql prompt configured in '$config_name'");
+    $m->out("Error: generate_ticketsql prompt not configured");
+    $m->abort();
+}
+
+# Read the TicketSQL grammar file from RT
+# The grammar file should be in RT's devel/docs directory
+my $rt_base_path = $RT::BasePath;
+my $grammar_file = "$rt_base_path/devel/docs/ticketsql_grammar.md";
+my $grammar_content = '';
+
+if (-f $grammar_file && -r $grammar_file) {
+    if (open my $fh, '<', $grammar_file) {
+        local $/;
+        $grammar_content = <$fh>;
+        close $fh;
+        RT->Logger->debug("Successfully loaded TicketSQL grammar file from: $grammar_file");
+    } else {
+        RT->Logger->error("Could not read TicketSQL grammar file: $!");
+    }
+} else {
+    RT->Logger->error("TicketSQL grammar file not found at: $grammar_file");
+}
+
+unless ($grammar_content) {
+    RT->Logger->error("TicketSQL grammar content is empty");
+    $m->out("Error: TicketSQL grammar not available");
+    $m->abort();
+}
+
+# Combine the grammar with the user's natural language query
+my $full_prompt = $prompt . "\n\n# TicketSQL Grammar\n\n" . $grammar_content . "\n\n# User Request\n\n" . $naturalLanguageQuery;
+
+# Initialize the AI provider
+my $provider_class = "RT::Extension::AI::Provider::" . $config->{name};
+my $provider_instance = $provider_class->new(config => $config);
+
+# Process the request
+my $response = $provider_instance->process_request(
+    prompt       => $full_prompt,
+    raw_text     => '',  # The query is in the prompt
+    model_config => $config->{default_model},
+);
+
+if ($response->{success}) {
+    # Extract just the TicketSQL from the response
+    # The AI might return it with explanation, so we try to extract just the query
+    my $ticketsql = $response->{result};
+
+    # Remove markdown code blocks if present
+    $ticketsql =~ s/```ticketsql\s*//g;
+    $ticketsql =~ s/```\s*//g;
+
+    # Trim whitespace
+    $ticketsql =~ s/^\s+|\s+$//g;
+
+    # If the response contains multiple lines, try to find the actual query
+    # (AI might add explanations before or after)
+    if ($ticketsql =~ /\n/) {
+        # Look for lines that look like TicketSQL (contain field names, operators, etc.)
+        my @lines = split /\n/, $ticketsql;
+        my $best_line = '';
+        for my $line (@lines) {
+            # Skip empty lines and explanations
+            next if $line =~ /^\s*$/;
+            next if $line =~ /^(here|this|the|note|explanation|search)/i;
+
+            # Look for common TicketSQL patterns
+            if ($line =~ /(Queue|Status|Owner|Priority|Subject|Created|Due|Requestor|Content)\s*[=!<>]|AND|OR/i) {
+                $best_line = $line;
+                last;
+            }
+        }
+        $ticketsql = $best_line if $best_line;
+    }
+
+    $result_text = $ticketsql;
+} else {
+    RT->Logger->error("AI request failed: " . $response->{error});
+    $result_text = "Error: " . ($response->{error} || "Unknown error");
+}
+
+</%INIT>
