@@ -1,6 +1,7 @@
 /**
- * Natural Language Search for TicketSQL
+ * Natural Language Search for TicketSQL and Format
  * Uses htmx for form submission and event handling
+ * Returns JSON with both query and format strings
  */
 export function initNaturalLanguageSearch() {
   // Wait for htmx to be available
@@ -21,12 +22,15 @@ export function initNaturalLanguageSearch() {
 
     const $generateBtn = $('#generate-ticketsql-btn');
     const $errorDiv = $('#nl-search-error');
+    const $messageDiv = $('#nl-search-message');
     const $queryTextarea = $('textarea[name="Query"]');
+    const $formatTextarea = $('textarea[name="Format"]');
 
     // Handle before request - show loading state
     form.addEventListener('htmx:beforeRequest', function(event) {
       $generateBtn.prop('disabled', true);
       $errorDiv.addClass('d-none');
+      $messageDiv.addClass('d-none');
     });
 
     // Handle after successful request
@@ -34,19 +38,49 @@ export function initNaturalLanguageSearch() {
       $generateBtn.prop('disabled', false);
 
       if (event.detail.successful) {
-        const response = event.detail.xhr.responseText;
+        const responseText = event.detail.xhr.responseText;
 
-        if (response && response.trim()) {
-          // Write the generated TicketSQL to the Query textarea
-          $queryTextarea.val(response.trim());
+        if (responseText && responseText.trim()) {
+          try {
+            // Parse JSON response
+            const response = JSON.parse(responseText);
 
-          // Show success message
-          if (typeof jGrowl !== 'undefined') {
-            jGrowl('Search generated', { sticky: false });
+            if (response.success) {
+              // Write the generated TicketSQL to the Query textarea
+              if (response.query) {
+                $queryTextarea.val(response.query);
+                $queryTextarea.trigger('change');
+              }
+
+              // Write the generated Format to the Format textarea
+              if (response.format && $formatTextarea.length) {
+                $formatTextarea.val(response.format);
+                $formatTextarea.trigger('change');
+              }
+
+              // Show success message
+              if (response.message) {
+                $messageDiv.text(response.message).removeClass('d-none');
+              }
+
+              if (typeof $.jGrowl === 'function') {
+                $.jGrowl('Search and format generated', { sticky: false });
+              }
+            } else {
+              // API returned success: false
+              const errorMsg = response.message || 'Failed to generate search. Please try again.';
+              $errorDiv.text(errorMsg).removeClass('d-none');
+            }
+          } catch (e) {
+            // Fallback: treat as plain text TicketSQL (backwards compatibility)
+            console.warn('Response was not JSON, treating as plain TicketSQL:', e);
+            $queryTextarea.val(responseText.trim());
+            $queryTextarea.trigger('change');
+
+            if (typeof $.jGrowl === 'function') {
+              $.jGrowl('Search generated', { sticky: false });
+            }
           }
-
-          // Trigger change event to update RT's search display
-          $queryTextarea.trigger('change');
         } else {
           $errorDiv.text('No search query was generated. Please try rephrasing your request.')
                    .removeClass('d-none');
@@ -60,7 +94,14 @@ export function initNaturalLanguageSearch() {
 
       let errorMessage = 'Failed to generate search. Please try again.';
       if (event.detail.xhr && event.detail.xhr.responseText) {
-        errorMessage += ' ' + event.detail.xhr.responseText;
+        try {
+          const response = JSON.parse(event.detail.xhr.responseText);
+          if (response.message) {
+            errorMessage = response.message;
+          }
+        } catch (e) {
+          errorMessage += ' ' + event.detail.xhr.responseText;
+        }
       }
 
       $errorDiv.text(errorMessage).removeClass('d-none');
