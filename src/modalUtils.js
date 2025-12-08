@@ -296,7 +296,7 @@ export async function createSuggestionModal(
                     const newDoneButton = modalManager.modalElement.querySelector('[name="done-button"]');
 
                     newDoneButton.addEventListener('click', () => {
-                        const aiResponse = suggestionText?.innerText?.replace(/^\s*|\s*$/g, '').trim();
+                        const aiResponse = suggestionText?.innerText?.replace(/^\s*|\s*$/g, '').trim().replace(/\n/g, '<br />');
 
                         if (!aiResponse) {
                             console.warn('No AI response to insert');
