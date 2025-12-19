@@ -51,21 +51,24 @@ PROCESS: {
     }
 
     # Read the TicketSQL grammar file from RT
-    my $rt_base_path = $RT::BasePath;
-    my $ticketsql_grammar_file = "$rt_base_path/devel/docs/ticketsql_grammar.md";
     my $ticketsql_grammar = '';
-
-    if (-f $ticketsql_grammar_file && -r $ticketsql_grammar_file) {
-        if (open my $fh, '<', $ticketsql_grammar_file) {
-            local $/;
-            $ticketsql_grammar = <$fh>;
-            close $fh;
-            RT->Logger->debug("Successfully loaded TicketSQL grammar file from: $ticketsql_grammar_file");
-        } else {
-            RT->Logger->error("Could not read TicketSQL grammar file: $!");
+    for my $dir ( $RT::LocalEtcPath, $RT::EtcPath ) {
+        my $ticketsql_grammar_file = "$dir/ai/syntax/ticketsql_grammar.md";
+        if ( -f $ticketsql_grammar_file && -r $ticketsql_grammar_file ) {
+            if ( open my $fh, '<', $ticketsql_grammar_file ) {
+                local $/;
+                $ticketsql_grammar = <$fh>;
+                close $fh;
+                RT->Logger->debug("Successfully loaded TicketSQL grammar file from: $ticketsql_grammar_file");
+                last;
+            }
+            else {
+                RT->Logger->error("Could not read TicketSQL grammar file: $!");
+            }
         }
-    } else {
-        RT->Logger->error("TicketSQL grammar file not found at: $ticketsql_grammar_file");
+        elsif ( $dir eq $RT::EtcPath ) {
+            RT->Logger->error("TicketSQL grammar file not found at: $ticketsql_grammar_file");
+        }
     }
 
     unless ($ticketsql_grammar) {
@@ -75,20 +78,25 @@ PROCESS: {
     }
 
     # Read the Format grammar file from RT
-    my $format_grammar_file = "$rt_base_path/devel/docs/format_grammar.md";
     my $format_grammar = '';
 
-    if (-f $format_grammar_file && -r $format_grammar_file) {
-        if (open my $fh, '<', $format_grammar_file) {
-            local $/;
-            $format_grammar = <$fh>;
-            close $fh;
-            RT->Logger->debug("Successfully loaded Format grammar file from: $format_grammar_file");
-        } else {
-            RT->Logger->warning("Could not read Format grammar file: $!");
+    for my $dir ( $RT::LocalEtcPath, $RT::EtcPath ) {
+        my $format_grammar_file = "$dir/ai/syntax/format_grammar.md";
+        if ( -f $format_grammar_file && -r $format_grammar_file ) {
+            if ( open my $fh, '<', $format_grammar_file ) {
+                local $/;
+                $format_grammar = <$fh>;
+                close $fh;
+                RT->Logger->debug("Successfully loaded Format grammar file from: $format_grammar_file");
+                last;
+            }
+            else {
+                RT->Logger->warning("Could not read Format grammar file: $!");
+            }
         }
-    } else {
-        RT->Logger->warning("Format grammar file not found at: $format_grammar_file");
+        elsif ( $dir eq $RT::EtcPath ) {
+            RT->Logger->warning("Format grammar file not found at: $format_grammar_file");
+        }
     }
 
     # Build the full prompt with both grammars
