@@ -1,3 +1,25 @@
 #aiModal {
     overflow-y: scroll;
 }
+
+#ai-progress-indicator {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+@keyframes ai-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--bs-border-color, #dee2e6);
+    border-top: 2px solid var(--bs-primary, #0d6efd);
+    border-radius: 50%;
+    animation: ai-spin 1s linear infinite;
+}
