@@ -47,9 +47,9 @@ sub run{
     # Determine output file path
     my $output_file = $OPT{'output-file'};
     unless ($output_file) {
-        # Default to RT var/ai_context directory with date-based filename
+        # Default to RT etc/ai/context directory with date-based filename
         my $date_str = strftime("%Y-%m-%d", localtime);
-        my $default_dir = File::Spec->catdir($RT::BasePath, 'var', 'ai_context');
+        my $default_dir = File::Spec->catdir($RT::EtcPath, 'ai', 'context');
         $output_file = File::Spec->catfile($default_dir, "context-$date_str.txt");
     }
 
@@ -179,12 +179,12 @@ Examples:
 =item B<--output-file> PATH
 
 Optional. Specifies the output file path. If not provided, defaults to
-"context-YYYY-MM-DD.txt" in "$RT::BasePath/var/ai_context/". The script will create
+"context-YYYY-MM-DD.txt" in "$RT::EtcPath/ai/context/". The script will create
 any necessary parent directories.
 
 Examples:
 
-    --output-file "/opt/rt6/var/ai_context/support-tickets.xml"
+    --output-file "/opt/rt6/etc/ai/context/support-tickets.xml"
     --output-file "/tmp/ticket-export.txt"
 
 =item B<--debug>

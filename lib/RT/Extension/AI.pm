@@ -298,7 +298,7 @@ Here is a sample configuration with Gemini:
              },
              editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
              use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
-             context_file_path => "$RT::BasePath/var/ai_context",  # Directory containing context files
+             context_file_path => "$RT::EtcPath/ai/context",  # Directory containing context files
              suggest_response_context_prompt => "Here are examples of similar previous conversations for context:",  # Text that introduces the context
           },
     );
@@ -331,7 +331,7 @@ Below shows a sample configuration with OpenAI:
             },
             editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
             use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
-            context_file_path => "$RT::BasePath/var/ai_context",  # Directory containing context files
+            context_file_path => "$RT::EtcPath/ai/context",  # Directory containing context files
             suggest_response_context_prompt => "Context: The following are complete conversation histories from similar resolved support tickets. Use these examples to understand typical issue patterns, effective troubleshooting approaches, and professional response tone. Each <Ticket> contains chronological messages between users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",  # Text that introduces the context
           },
     );
@@ -397,7 +397,7 @@ from similar tickets to help the AI generate more contextually appropriate respo
 To enable context file usage:
 
     use_context_files => 1,
-    context_file_path => "$RT::BasePath/var/ai_context",
+    context_file_path => "$RT::EtcPath/ai/context",
     suggest_response_context_prompt => "Context: The following are complete conversation histories from similar resolved support tickets. Use these examples to understand typical issue patterns, effective troubleshooting approaches, and professional response tone. Each <Ticket> contains chronological messages between users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",
 
 When enabled, the C<suggest_response> feature will look for relevant context files
