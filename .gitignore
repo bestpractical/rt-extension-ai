@@ -15,3 +15,4 @@ pod2htm*.tmp
 node_modules
 bin/rt-build-context-files
 *.txt
+/working-docs/*
