@@ -16,3 +16,5 @@ node_modules
 bin/rt-build-context-files
 *.txt
 /working-docs/*
+/.claude/*
+CLAUDE.md
