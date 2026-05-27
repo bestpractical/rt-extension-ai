@@ -14,7 +14,7 @@
 %   # Render the welcome message first, then the stored conversation
     <div class="d-flex mb-2 align-items-start gap-2">
       <% $ai_avatar_html |n %>
-      <div class="ai-chat-message-content bg-light border rounded-3 py-2 px-3">
+      <div class="ai-chat-message-content bg-body-secondary border rounded-3 py-2 px-3">
         <% loc("Hello! I'm here to help you set up a new queue. Tell me about the work your team handles. What kind of requests come in, and how does your team process them?") %>
       </div>
     </div>
@@ -27,14 +27,14 @@
 %     } else {
     <div class="d-flex mb-2 align-items-start gap-2">
       <div class="flex-shrink-0"><% $ai_avatar_html |n %></div>
-      <div class="ai-chat-message-content bg-light border rounded-3 py-2 px-3"><% $entry->{content} |h %></div>
+      <div class="ai-chat-message-content bg-body-secondary border rounded-3 py-2 px-3"><% $entry->{content} |h %></div>
     </div>
 %     }
 %   }
 % } else {
     <div class="d-flex mb-2 align-items-start gap-2">
       <% $ai_avatar_html |n %>
-      <div class="ai-chat-message-content bg-light border rounded-3 py-2 px-3">
+      <div class="ai-chat-message-content bg-body-secondary border rounded-3 py-2 px-3">
         <% loc("Hello! I'm here to help you set up a new queue. Tell me about the work your team handles. What kind of requests come in, and how does your team process them?") %>
       </div>
     </div>
@@ -44,7 +44,7 @@
   <div id="ai-chat-apply-section" style="display: none;">
     <div class="border-bottom p-3">
       <h6 class="text-muted mb-2"><% loc('Review Configuration') %></h6>
-      <div id="ai-chat-initialdata-preview" class="bg-light border rounded p-3 mb-2">
+      <div id="ai-chat-initialdata-preview" class="bg-body-secondary border rounded p-3 mb-2">
       </div>
       <div class="mb-2">
         <a class="small text-decoration-none" data-bs-toggle="collapse" href="#ai-chat-raw-json" role="button" aria-expanded="false" aria-controls="ai-chat-raw-json">

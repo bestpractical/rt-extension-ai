@@ -1,5 +1,5 @@
 % if ( RT->Config->Get('RT_AI_Provider') ) {
-<div class="card mb-3 bg-light border-start border-primary border-4" id="natural-language-search-card">
+<div class="card mb-3 border-start border-primary border-4" id="natural-language-search-card">
   <div class="card-body">
     <h5 class="card-title"><&|/l&>Natural Language Search</&></h5>
     <p class="text-muted small"><&|/l&>Describe the tickets you want to find in plain language, and AI will generate the search query and display format for you.</&></p>

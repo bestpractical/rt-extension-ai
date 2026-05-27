@@ -37,7 +37,7 @@ function initAIChat() {
         if (role === 'user') {
             bubble.classList.add('bg-primary', 'text-white');
         } else {
-            bubble.classList.add('bg-light', 'border');
+            bubble.classList.add('bg-body-secondary', 'border');
         }
 
         // Basic formatting
@@ -58,7 +58,7 @@ function initAIChat() {
         wrapper.appendChild(avatarDiv);
 
         var bubble = document.createElement('div');
-        bubble.className = 'ai-chat-message-content bg-light border rounded-3 py-2 px-3 text-secondary fst-italic';
+        bubble.className = 'ai-chat-message-content bg-body-secondary border rounded-3 py-2 px-3 text-secondary fst-italic';
         bubble.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Thinking...';
 
         wrapper.appendChild(bubble);
@@ -324,8 +324,8 @@ function initAIChat() {
     if (existingMsgs.length > 1) {
         for (var i = 0; i < existingMsgs.length; i++) {
             var msg = existingMsgs[i];
-            // Only format assistant messages (bg-light), skip user messages (bg-primary)
-            if (msg.classList.contains('bg-light')) {
+            // Only format assistant messages (bg-body-secondary), skip user messages (bg-primary)
+            if (msg.classList.contains('bg-body-secondary')) {
                 msg.innerHTML = formatMessage(escapeHtml(msg.textContent));
             }
         }
