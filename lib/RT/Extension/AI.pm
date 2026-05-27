@@ -3,7 +3,7 @@ use warnings;
 
 package RT::Extension::AI;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 require RT::Extension::AI::Provider;
 require RT::Extension::AI::Provider::OpenAI;
@@ -550,7 +550,7 @@ Or via the web at: L<rt.cpan.org|http://rt.cpan.org/Public/Dist/Display.html?Nam
 
 =head1 COPYRIGHT
 
-This extension is Copyright (C) 2013-2025 Best Practical Solutions, LLC.
+This extension is Copyright (C) 2013-2026 Best Practical Solutions, LLC.
 
 This is free software, licensed under:
 

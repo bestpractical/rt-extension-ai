@@ -74,8 +74,9 @@ CONFIGURATION
                     autocomplete_text => 'Predict the next three words based on the input text without explanations.',
                  },
                  editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
+                 queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
                  use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
-                 context_file_path => "$RT::BasePath/var/ai_context",  # Directory containing context files
+                 context_file_path => "$RT::EtcPath/ai/context",  # Directory containing context files
                  suggest_response_context_prompt => "Here are examples of similar previous conversations for context:",  # Text that introduces the context
               },
         );
@@ -107,8 +108,9 @@ CONFIGURATION
                     autocomplete_text => 'Predict the next three words based on the input text without explanations.',
                 },
                 editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
+                queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
                 use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
-                context_file_path => "$RT::BasePath/var/ai_context",  # Directory containing context files
+                context_file_path => "$RT::EtcPath/ai/context",  # Directory containing context files
                 suggest_response_context_prompt => "Context: The following are complete conversation histories from similar resolved support tickets. Use these examples to understand typical issue patterns, effective troubleshooting approaches, and professional response tone. Each <Ticket> contains chronological messages between users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",  # Text that introduces the context
               },
         );
@@ -166,7 +168,7 @@ CONFIGURATION
     To enable context file usage:
 
         use_context_files => 1,
-        context_file_path => "$RT::BasePath/var/ai_context",
+        context_file_path => "$RT::EtcPath/ai/context",
         suggest_response_context_prompt => "Context: The following are complete conversation histories from similar resolved support tickets. Use these examples to understand typical issue patterns, effective troubleshooting approaches, and professional response tone. Each <Ticket> contains chronological messages between users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",
 
     When enabled, the suggest_response feature will look for relevant
@@ -175,6 +177,14 @@ CONFIGURATION
     suggest_response_context_prompt setting allows you to customize the
     introductory text that explains the context to the AI for
     suggest_response requests.
+
+  Queue Creation Assistant
+    To enable the queue creation assistant, add the following to your
+    provider configuration:
+
+        queue_creation_assistant => 1,
+
+    See "Queue Creation Assistant" under FEATURES below for details.
 
   CKEditor Integration
     Some AI features are integrated into RT's editor and are accessible via
@@ -239,6 +249,16 @@ FEATURES
         Translate the provided content from the current language to another
         selected language.
 
+  Queue Creation Assistant
+    An interactive chat interface under Admin > Queues > Create with AI that
+    guides administrators through setting up a new queue. Through a
+    multi-turn conversation, the AI gathers workflow details and generates a
+    complete configuration including a custom lifecycle, queue, groups,
+    custom fields, ACL rights, and queue watchers. The admin reviews a
+    summary of the proposed configuration and creates all objects with a
+    single click. See "Queue Creation Assistant" above for configuration
+    details.
+
 DEVELOPER
   CKEditor Plugin RtExtensionAi
     A new custom CKEditor plugin RtExtensionAi provides the AI integration
@@ -277,9 +297,14 @@ BUGS
     <http://rt.cpan.org/Public/Dist/Display.html?Name=RT-Extension-AI>.
 
 COPYRIGHT
-    This extension is Copyright (C) 2013-2025 Best Practical Solutions, LLC.
+    This extension is Copyright (C) 2013-2026 Best Practical Solutions, LLC.
 
     This is free software, licensed under:
 
       The GNU General Public License, Version 2, June 1991
+
+  LoadQueueCreationPrompt
+    Load the system prompt for the queue creation assistant from
+    etc/ai/prompts/create-queue.md. Searches the local etc directory, the
+    default etc directory, and installed plugin paths.
 
