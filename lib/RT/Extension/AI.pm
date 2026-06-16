@@ -27,203 +27,6 @@ if ( RT->Config->can('RegisterPluginConfig') ) {
     );
 }
 
-=head2 GenerateTicketSummary
-
-Generate a formatted summary of ticket conversations for AI processing. This function
-extracts Create and Correspond transactions from a ticket and formats them using
-XML-like tags similar to the context file format.
-
-=cut
-
-sub GenerateTicketSummary {
-    my %args = @_;
-    my $ticket = $args{TicketObj} or return '';
-    my $type = $args{TransactionType} || 'Correspond';
-    my $include_create = defined $args{IncludeCreate} ? $args{IncludeCreate} : 1;
-    my $transaction_limit = 20; # Maximum number of transactions to include (excluding Create)
-
-    # Get Create transaction separately if requested
-    my $create_transaction = '';
-    if ($include_create) {
-        my $create_txns = $ticket->Transactions;
-        $create_txns->Limit(FIELD => 'Type', VALUE => 'Create', OPERATOR => '=');
-        $create_txns->OrderBy(FIELD => 'Created', ORDER => 'ASC');
-        if (my $create_txn = $create_txns->First) {
-            my $content = $create_txn->Content || '';
-            $content = CleanTransactionContent($content);
-            if ($content) {
-                my $creator_id = $create_txn->CreatorObj->Id;
-                my $creator = $create_txn->CreatorObj;
-                my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
-                $create_transaction = sprintf "<InitialRequest user=\"User1\" privilege=\"%s\" sequence=\"1\">%s</InitialRequest>\n",
-                    $privilege_type, $content;
-            }
-        }
-    }
-
-    # Get the most recent transactions of the specified type (limit 20)
-    my $transactions = $ticket->Transactions;
-    if ($type ne 'Create') {
-        $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=');
-    } else {
-        # If only Create is requested and already handled above, return early
-        return $create_transaction;
-    }
-    $transactions->OrderBy(FIELD => 'Created', ORDER => 'DESC');
-    $transactions->RowsPerPage($transaction_limit);
-
-    # Collect transactions in reverse order (most recent first) then reverse for chronological
-    my @txn_list = ();
-    while (my $txn = $transactions->Next) {
-        push @txn_list, $txn;
-    }
-    @txn_list = reverse @txn_list; # Now in chronological order (oldest first)
-
-    my $conversation = '';
-    my $sequence = $include_create ? 2 : 1; # Start at 2 if Create transaction exists
-
-    # Track users for anonymization (reserve User1 for Create if it exists)
-    my %user_map = ();
-    my $user_counter = $include_create ? 2 : 1;
-
-    for my $txn (@txn_list) {
-        my $creator_id = $txn->CreatorObj->Id;
-        my $creator = $txn->CreatorObj;
-        my $content = $txn->Content || '';
-
-        # Skip empty content
-        next unless $content;
-
-        # Create anonymous user mapping with privilege info
-        unless (exists $user_map{$creator_id}) {
-            my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
-            $user_map{$creator_id} = {
-                name => "User$user_counter",
-                privileged => $privilege_type
-            };
-            $user_counter++;
-        }
-
-        my $user_info = $user_map{$creator_id};
-
-        # Clean up the content (remove RT's standard headers, etc.)
-        $content = CleanTransactionContent($content);
-
-        if ($content) {
-            $conversation .= sprintf "<Message user=\"%s\" privilege=\"%s\" sequence=\"%d\">%s</Message>\n",
-                $user_info->{name},
-                $user_info->{privileged},
-                $sequence,
-                $content;
-            $sequence++;
-        }
-    }
-
-    return $create_transaction . $conversation;
-}
-
-=head2 CleanTransactionContent
-
-Clean up transaction content by removing RT email headers, signatures, and excessive
-whitespace. Also escapes XML characters for safe inclusion in XML output.
-
-=cut
-
-sub CleanTransactionContent {
-    my $content = shift;
-    return '' unless $content;
-
-    # Remove common RT email headers and signatures
-    $content =~ s/^>.*$//gm;  # Remove quoted lines starting with >
-    $content =~ s/^On.*wrote:.*$//gm;  # Remove "On ... wrote:" lines
-    $content =~ s/^\s*--\s*\n.*$//ms;  # Remove signature blocks starting with --
-
-    # Remove excessive whitespace
-    $content =~ s/\n\s*\n/\n\n/g;  # Normalize multiple blank lines to double newlines
-    $content =~ s/^\s+//;  # Remove leading whitespace
-    $content =~ s/\s+$//;  # Remove trailing whitespace
-
-    # Escape XML characters
-    $content =~ s/&/&amp;/g;
-    $content =~ s/</&lt;/g;
-    $content =~ s/>/&gt;/g;
-
-    return $content;
-}
-
-=head2 LoadContextFile
-
-Load and return the contents of a context file for AI processing. This function
-searches for relevant context files in the configured directory and returns
-the content for inclusion in AI API requests.
-
-=cut
-
-sub LoadContextFile {
-    my %args = @_;
-    my $config = $args{config} || {};
-    my $queue = $args{queue} || 'Default';
-    my $ticket_id = $args{ticket_id};
-
-    # Check if context files are enabled
-    return undef unless $config->{use_context_files};
-    return undef unless $config->{context_file_path};
-
-    my $context_dir = $config->{context_file_path};
-
-    # Ensure the directory exists
-    unless (-d $context_dir) {
-        RT->Logger->debug("Context file directory does not exist: $context_dir");
-        return undef;
-    }
-
-    # Look for context files in the directory
-    # Priority order: queue-specific files, then general files
-    my @potential_files = ();
-
-    if (opendir(my $dh, $context_dir)) {
-        my @files = grep { /\.txt$|\.xml$/ && -f "$context_dir/$_" } readdir($dh);
-        closedir($dh);
-
-        # Sort files by modification time (newest first)
-        @files = sort {
-            (stat("$context_dir/$b"))[9] <=> (stat("$context_dir/$a"))[9]
-        } @files;
-
-        # Prefer queue-specific files if available
-        for my $file (@files) {
-            if ($file =~ /\Q$queue\E/i) {
-                unshift @potential_files, $file;
-            } else {
-                push @potential_files, $file;
-            }
-        }
-    } else {
-        RT->Logger->error("Cannot read context file directory: $context_dir");
-        return undef;
-    }
-
-    # Try to load the most suitable context file
-    for my $filename (@potential_files) {
-        my $filepath = "$context_dir/$filename";
-
-        if (open(my $fh, '<:encoding(UTF-8)', $filepath)) {
-            my $content = do { local $/; <$fh> };
-            close($fh);
-
-            if ($content && length($content) > 0) {
-                RT->Logger->debug("Loaded context file: $filename");
-                return $content;
-            }
-        } else {
-            RT->Logger->debug("Cannot read context file: $filepath");
-        }
-    }
-
-    RT->Logger->debug("No suitable context file found in: $context_dir");
-    return undef;
-}
-
 =head1 NAME
 
 RT-Extension-AI - Add various AI Features to Request Tracker
@@ -557,6 +360,205 @@ This is free software, licensed under:
   The GNU General Public License, Version 2, June 1991
 
 =cut
+
+=head1 INTERNAL METHODS AND FUNCTIONS
+
+=head2 GenerateTicketSummary
+
+Generate a formatted summary of ticket conversations for AI processing. This function
+extracts Create and Correspond transactions from a ticket and formats them using
+XML-like tags similar to the context file format.
+
+=cut
+
+sub GenerateTicketSummary {
+    my %args = @_;
+    my $ticket = $args{TicketObj} or return '';
+    my $type = $args{TransactionType} || 'Correspond';
+    my $include_create = defined $args{IncludeCreate} ? $args{IncludeCreate} : 1;
+    my $transaction_limit = 20; # Maximum number of transactions to include (excluding Create)
+
+    # Get Create transaction separately if requested
+    my $create_transaction = '';
+    if ($include_create) {
+        my $create_txns = $ticket->Transactions;
+        $create_txns->Limit(FIELD => 'Type', VALUE => 'Create', OPERATOR => '=');
+        $create_txns->OrderBy(FIELD => 'Created', ORDER => 'ASC');
+        if (my $create_txn = $create_txns->First) {
+            my $content = $create_txn->Content || '';
+            $content = CleanTransactionContent($content);
+            if ($content) {
+                my $creator_id = $create_txn->CreatorObj->Id;
+                my $creator = $create_txn->CreatorObj;
+                my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
+                $create_transaction = sprintf "<InitialRequest user=\"User1\" privilege=\"%s\" sequence=\"1\">%s</InitialRequest>\n",
+                    $privilege_type, $content;
+            }
+        }
+    }
+
+    # Get the most recent transactions of the specified type (limit 20)
+    my $transactions = $ticket->Transactions;
+    if ($type ne 'Create') {
+        $transactions->Limit(FIELD => 'Type', VALUE => $type, OPERATOR => '=');
+    } else {
+        # If only Create is requested and already handled above, return early
+        return $create_transaction;
+    }
+    $transactions->OrderBy(FIELD => 'Created', ORDER => 'DESC');
+    $transactions->RowsPerPage($transaction_limit);
+
+    # Collect transactions in reverse order (most recent first) then reverse for chronological
+    my @txn_list = ();
+    while (my $txn = $transactions->Next) {
+        push @txn_list, $txn;
+    }
+    @txn_list = reverse @txn_list; # Now in chronological order (oldest first)
+
+    my $conversation = '';
+    my $sequence = $include_create ? 2 : 1; # Start at 2 if Create transaction exists
+
+    # Track users for anonymization (reserve User1 for Create if it exists)
+    my %user_map = ();
+    my $user_counter = $include_create ? 2 : 1;
+
+    for my $txn (@txn_list) {
+        my $creator_id = $txn->CreatorObj->Id;
+        my $creator = $txn->CreatorObj;
+        my $content = $txn->Content || '';
+
+        # Skip empty content
+        next unless $content;
+
+        # Create anonymous user mapping with privilege info
+        unless (exists $user_map{$creator_id}) {
+            my $privilege_type = $creator->Privileged ? 'Privileged' : 'Unprivileged';
+            $user_map{$creator_id} = {
+                name => "User$user_counter",
+                privileged => $privilege_type
+            };
+            $user_counter++;
+        }
+
+        my $user_info = $user_map{$creator_id};
+
+        # Clean up the content (remove RT's standard headers, etc.)
+        $content = CleanTransactionContent($content);
+
+        if ($content) {
+            $conversation .= sprintf "<Message user=\"%s\" privilege=\"%s\" sequence=\"%d\">%s</Message>\n",
+                $user_info->{name},
+                $user_info->{privileged},
+                $sequence,
+                $content;
+            $sequence++;
+        }
+    }
+
+    return $create_transaction . $conversation;
+}
+
+=head2 CleanTransactionContent
+
+Clean up transaction content by removing RT email headers, signatures, and excessive
+whitespace. Also escapes XML characters for safe inclusion in XML output.
+
+=cut
+
+sub CleanTransactionContent {
+    my $content = shift;
+    return '' unless $content;
+
+    # Remove common RT email headers and signatures
+    $content =~ s/^>.*$//gm;  # Remove quoted lines starting with >
+    $content =~ s/^On.*wrote:.*$//gm;  # Remove "On ... wrote:" lines
+    $content =~ s/^\s*--\s*\n.*$//ms;  # Remove signature blocks starting with --
+
+    # Remove excessive whitespace
+    $content =~ s/\n\s*\n/\n\n/g;  # Normalize multiple blank lines to double newlines
+    $content =~ s/^\s+//;  # Remove leading whitespace
+    $content =~ s/\s+$//;  # Remove trailing whitespace
+
+    # Escape XML characters
+    $content =~ s/&/&amp;/g;
+    $content =~ s/</&lt;/g;
+    $content =~ s/>/&gt;/g;
+
+    return $content;
+}
+
+=head2 LoadContextFile
+
+Load and return the contents of a context file for AI processing. This function
+searches for relevant context files in the configured directory and returns
+the content for inclusion in AI API requests.
+
+=cut
+
+sub LoadContextFile {
+    my %args = @_;
+    my $config = $args{config} || {};
+    my $queue = $args{queue} || 'Default';
+    my $ticket_id = $args{ticket_id};
+
+    # Check if context files are enabled
+    return undef unless $config->{use_context_files};
+    return undef unless $config->{context_file_path};
+
+    my $context_dir = $config->{context_file_path};
+
+    # Ensure the directory exists
+    unless (-d $context_dir) {
+        RT->Logger->debug("Context file directory does not exist: $context_dir");
+        return undef;
+    }
+
+    # Look for context files in the directory
+    # Priority order: queue-specific files, then general files
+    my @potential_files = ();
+
+    if (opendir(my $dh, $context_dir)) {
+        my @files = grep { /\.txt$|\.xml$/ && -f "$context_dir/$_" } readdir($dh);
+        closedir($dh);
+
+        # Sort files by modification time (newest first)
+        @files = sort {
+            (stat("$context_dir/$b"))[9] <=> (stat("$context_dir/$a"))[9]
+        } @files;
+
+        # Prefer queue-specific files if available
+        for my $file (@files) {
+            if ($file =~ /\Q$queue\E/i) {
+                unshift @potential_files, $file;
+            } else {
+                push @potential_files, $file;
+            }
+        }
+    } else {
+        RT->Logger->error("Cannot read context file directory: $context_dir");
+        return undef;
+    }
+
+    # Try to load the most suitable context file
+    for my $filename (@potential_files) {
+        my $filepath = "$context_dir/$filename";
+
+        if (open(my $fh, '<:encoding(UTF-8)', $filepath)) {
+            my $content = do { local $/; <$fh> };
+            close($fh);
+
+            if ($content && length($content) > 0) {
+                RT->Logger->debug("Loaded context file: $filename");
+                return $content;
+            }
+        } else {
+            RT->Logger->debug("Cannot read context file: $filepath");
+        }
+    }
+
+    RT->Logger->debug("No suitable context file found in: $context_dir");
+    return undef;
+}
 
 =head2 LoadQueueCreationPrompt
 

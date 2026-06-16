@@ -1,18 +1,3 @@
-  GenerateTicketSummary
-    Generate a formatted summary of ticket conversations for AI processing.
-    This function extracts Create and Correspond transactions from a ticket
-    and formats them using XML-like tags similar to the context file format.
-
-  CleanTransactionContent
-    Clean up transaction content by removing RT email headers, signatures,
-    and excessive whitespace. Also escapes XML characters for safe inclusion
-    in XML output.
-
-  LoadContextFile
-    Load and return the contents of a context file for AI processing. This
-    function searches for relevant context files in the configured directory
-    and returns the content for inclusion in AI API requests.
-
 NAME
     RT-Extension-AI - Add various AI Features to Request Tracker
 
@@ -302,6 +287,22 @@ COPYRIGHT
     This is free software, licensed under:
 
       The GNU General Public License, Version 2, June 1991
+
+INTERNAL METHODS AND FUNCTIONS
+  GenerateTicketSummary
+    Generate a formatted summary of ticket conversations for AI processing.
+    This function extracts Create and Correspond transactions from a ticket
+    and formats them using XML-like tags similar to the context file format.
+
+  CleanTransactionContent
+    Clean up transaction content by removing RT email headers, signatures,
+    and excessive whitespace. Also escapes XML characters for safe inclusion
+    in XML output.
+
+  LoadContextFile
+    Load and return the contents of a context file for AI processing. This
+    function searches for relevant context files in the configured directory
+    and returns the content for inclusion in AI API requests.
 
   LoadQueueCreationPrompt
     Load the system prompt for the queue creation assistant from
