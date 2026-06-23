@@ -231,6 +231,47 @@ however, requires fast responses, so we provide a way to set a different model
 for that feature. ChatGPT, for example, has a turbo model that is optimized for
 speed and makes the autocomplete work much better.
 
+=head2 Token Usage and Costs
+
+AI providers bill based on the number of tokens they process, counting both the
+input you send (your prompts, the ticket content, and any reference material) and
+the output they return. Providers differ in their default input token limits and
+in how they price input tokens, so a feature that runs well and costs little with
+one provider may hit a limit or cost more with another.
+
+In our testing, Google Gemini accepted large inputs by default and at low cost.
+Claude (Anthropic), by contrast, applies tiered rate limits, and we had to move
+the account up to "Tier 1" to raise the default input token limit enough for the
+heavier features to run. Your own provider may behave differently and will be
+influenced by your usage of different features.
+
+Some features send much larger inputs than others. These tend to use the most
+input tokens:
+
+=over
+
+=item *
+
+The B<natural language search> sends the TicketSQL and Format grammar references
+with every request, which makes each call large.
+
+=item *
+
+The B<Queue Creation Assistant> carries the full chat history with each turn, so
+the input grows as the conversation continues.
+
+=item *
+
+B<suggest_response>, when context files are enabled, includes conversation
+histories from similar tickets, which can add substantial input.
+
+=back
+
+Before enabling these features in full production, test them with your provider
+and watch your token usage for both input and output. Confirm that your account's
+limits and budget can absorb the volume you expect. Refer to your AI provider's
+documentation for the details of their token limits, pricing, and policies.
+
 =head2 Prompts
 
 You can define different prompts for different AI features. The keys in the
