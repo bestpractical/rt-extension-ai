@@ -398,6 +398,22 @@ rights, and queue watchers. The admin reviews a summary of the proposed
 configuration and creates all objects with a single click. See
 L</Queue Creation Assistant> above for configuration details.
 
+=head2 Natural Language Search (beta)
+
+A natural language search form on the advanced search page (Search >
+Tickets > Natural Language (AI), or directly at F</Search/Edit.html>).
+Describe the tickets you want to find in plain language and the AI
+provider generates the corresponding TicketSQL query and display
+columns for you. Click "Generate Search" to create the search, then
+click "Apply" to confirm it and return to the Query Builder. The form is
+shown whenever an AI provider is configured.
+
+This feature is currently in beta and has the following limitation: the
+AI does not yet know the specific queue names, statuses, custom fields,
+and other object names defined in your RT. If your question depends on
+any of these, include the correct names in your request so the AI can
+generate an accurate search.
+
 =head1 DEVELOPER
 
 =head2 CKEditor Plugin RtExtensionAi
