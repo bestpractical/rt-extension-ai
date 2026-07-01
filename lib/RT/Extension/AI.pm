@@ -3,7 +3,7 @@ use warnings;
 
 package RT::Extension::AI;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 require RT::Extension::AI::Provider;
 require RT::Extension::AI::Provider::OpenAI;
@@ -100,6 +100,7 @@ Here is a sample configuration with Gemini:
                 suggest_response => 'Provide clear, practical advice or suggestions based on the given question or scenario.',
                 translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
                 autocomplete_text => 'Predict the next three words based on the input text without explanations.',
+                generate_ticketsql => 'You are an expert in Request Tracker (RT) search. Given a natural language description, generate a TicketSQL query to find tickets. If the request references desired columns in the output, also generate a Format string to display the results appropriately. Use the provided TicketSQL and Format grammar references to ensure correctness. Consider what columns would be most useful to display based on the user request.',
              },
              editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
              queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
@@ -134,6 +135,7 @@ Below shows a sample configuration with OpenAI:
                 suggest_response => 'Provide clear, practical advice or suggestions based on the given question or scenario.',
                 translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
                 autocomplete_text => 'Predict the next three words based on the input text without explanations.',
+                generate_ticketsql => 'You are an expert in Request Tracker (RT) search. Given a natural language description, generate a TicketSQL query to find tickets. If the request references desired columns in the output, also generate a Format string to display the results appropriately. Use the provided TicketSQL and Format grammar references to ensure correctness. Consider what columns would be most useful to display based on the user request.',
             },
             editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
             queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
@@ -168,6 +170,7 @@ Below shows a sample configuration with Claude (Anthropic):
                 suggest_response => 'Provide clear, practical advice or suggestions based on the given question or scenario.',
                 translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
                 autocomplete_text => 'Predict the next three words based on the input text without explanations.',
+                generate_ticketsql => 'You are an expert in Request Tracker (RT) search. Given a natural language description, generate a TicketSQL query to find tickets. If the request references desired columns in the output, also generate a Format string to display the results appropriately. Use the provided TicketSQL and Format grammar references to ensure correctness. Consider what columns would be most useful to display based on the user request.',
             },
             editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
             queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
