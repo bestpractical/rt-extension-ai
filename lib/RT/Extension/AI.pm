@@ -8,6 +8,7 @@ our $VERSION = '0.06';
 require RT::Extension::AI::Provider;
 require RT::Extension::AI::Provider::OpenAI;
 require RT::Extension::AI::Provider::Gemini;
+require RT::Extension::AI::Provider::Claude;
 
 RT->AddJavaScript('rt-extension-ai.js');
 RT->AddJavaScript('ai-chat.js');
@@ -142,6 +143,46 @@ Below shows a sample configuration with OpenAI:
           },
     );
 
+Below shows a sample configuration with Claude (Anthropic):
+
+    Set( %RT_AI_Provider,
+          'Default' => {
+            name    => 'Claude',
+            api_key => 'YOUR_API_KEY',
+            timeout => 30,
+            url     => 'https://api.anthropic.com/v1/messages',
+            default_model => {
+                name       => 'claude-opus-4-8',
+                max_tokens => 1024,
+                # temperature => 0.5,   # Omit for frontier models (Opus 4.7+),
+                                        # which reject temperature with a 400.
+            },
+            autocomplete_model => {
+                name       => 'claude-haiku-4-5',
+                max_tokens => 20,
+            },
+            prompts => {
+                summarize_ticket => 'You are a helpdesk assistant. Summarize the ticket conversation precisely. Focus on key points, decisions made, and any follow-up actions required.',
+                assess_sentiment => 'Classify the overall sentiment as Satisfied, Dissatisfied, or Neutral. Provide reasoning if possible.',
+                adjust_tone => 'Paraphrase the text for clarity and professionalism. Ensure the tone is polite, concise, and customer-friendly.',
+                suggest_response => 'Provide clear, practical advice or suggestions based on the given question or scenario.',
+                translate_content => 'Translate the provided text, maintaining accuracy and idiomatic expressions.',
+                autocomplete_text => 'Predict the next three words based on the input text without explanations.',
+            },
+            editor_features => [ 'adjust_tone', 'suggest_response', 'translate_content', 'autocomplete_text' ],
+            queue_creation_assistant => 1,  # Set to 0 to disable the AI queue creation assistant
+            use_context_files => 0,  # Set to 1 to enable context file usage for suggest_response
+            context_file_path => "$RT::EtcPath/ai/context",  # Directory containing context files
+            suggest_response_context_prompt => "Context: The following are complete conversation histories from similar resolved support tickets. Use these examples to understand typical issue patterns, effective troubleshooting approaches, and professional response tone. Each <Ticket> contains chronological messages between users (customers/requesters) and support staff (privileged users). Apply these patterns to craft an appropriate response:",  # Text that introduces the context
+          },
+    );
+
+The Anthropic Messages API requires C<max_tokens>, so always set it
+in C<default_model> (and C<autocomplete_model>). C<temperature> is sent only when
+you set it explicitly, because the frontier models (Opus 4.7 and later) reject
+it. To pin a specific API version, add an C<anthropic_version> key to the
+provider configuration; it defaults to C<2023-06-01>.
+
 =head2 Global and Queue-specific Configuration
 
 The block of configuration defined for the "Default" key, as shown above, is used
@@ -176,6 +217,10 @@ OpenAPI, URL: https://api.openai.com/v1/chat/completions
 
 Gemini, URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
 
+=item *
+
+Claude (Anthropic), URL: https://api.anthropic.com/v1/messages
+
 =back
 
 =head2 Models
@@ -185,6 +230,47 @@ Currently most AI features use the general model. The autocomplete feature,
 however, requires fast responses, so we provide a way to set a different model
 for that feature. ChatGPT, for example, has a turbo model that is optimized for
 speed and makes the autocomplete work much better.
+
+=head2 Token Usage and Costs
+
+AI providers bill based on the number of tokens they process, counting both the
+input you send (your prompts, the ticket content, and any reference material) and
+the output they return. Providers differ in their default input token limits and
+in how they price input tokens, so a feature that runs well and costs little with
+one provider may hit a limit or cost more with another.
+
+In our testing, Google Gemini accepted large inputs by default and at low cost.
+Claude (Anthropic), by contrast, applies tiered rate limits, and we had to move
+the account up to "Tier 1" to raise the default input token limit enough for the
+heavier features to run. Your own provider may behave differently and will be
+influenced by your usage of different features.
+
+Some features send much larger inputs than others. These tend to use the most
+input tokens:
+
+=over
+
+=item *
+
+The B<natural language search> sends the TicketSQL and Format grammar references
+with every request, which makes each call large.
+
+=item *
+
+The B<Queue Creation Assistant> carries the full chat history with each turn, so
+the input grows as the conversation continues.
+
+=item *
+
+B<suggest_response>, when context files are enabled, includes conversation
+histories from similar tickets, which can add substantial input.
+
+=back
+
+Before enabling these features in full production, test them with your provider
+and watch your token usage for both input and output. Confirm that your account's
+limits and budget can absorb the volume you expect. Refer to your AI provider's
+documentation for the details of their token limits, pricing, and policies.
 
 =head2 Prompts
 
@@ -311,6 +397,22 @@ configuration including a custom lifecycle, queue, groups, custom fields, ACL
 rights, and queue watchers. The admin reviews a summary of the proposed
 configuration and creates all objects with a single click. See
 L</Queue Creation Assistant> above for configuration details.
+
+=head2 Natural Language Search (beta)
+
+A natural language search form on the advanced search page (Search >
+Tickets > Natural Language (AI), or directly at F</Search/Edit.html>).
+Describe the tickets you want to find in plain language and the AI
+provider generates the corresponding TicketSQL query and display
+columns for you. Click "Generate Search" to create the search, then
+click "Apply" to confirm it and return to the Query Builder. The form is
+shown whenever an AI provider is configured.
+
+This feature is currently in beta and has the following limitation: the
+AI does not yet know the specific queue names, statuses, custom fields,
+and other object names defined in your RT. If your question depends on
+any of these, include the correct names in your request so the AI can
+generate an accurate search.
 
 =head1 DEVELOPER
 
