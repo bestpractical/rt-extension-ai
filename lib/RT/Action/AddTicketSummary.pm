@@ -42,6 +42,7 @@ sub Commit {
         prompt       => $config->{prompts}{summarize_ticket},
         raw_text     => $conversation,
         model_config => $config->{default_model},
+        feature      => 'summarize_ticket',
     );
 
     unless ( $response->{success} ) {

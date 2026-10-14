@@ -20,7 +20,7 @@ sub default_headers {
     };
 }
 
-sub process_request {
+sub _process_request {
     my ( $self, %args ) = @_;
     my $ua = $self->{ua};
 
@@ -99,6 +99,17 @@ sub process_request {
             raw     => $response->decoded_content,
         };
     }
+}
+
+sub _usage {
+    my ( $self, $raw ) = @_;
+    return {} unless ref $raw eq 'HASH' && ref $raw->{usage} eq 'HASH';
+
+    my $usage = $raw->{usage};
+    return {
+        input_tokens  => $usage->{input_tokens},
+        output_tokens => $usage->{output_tokens},
+    };
 }
 
 1;
