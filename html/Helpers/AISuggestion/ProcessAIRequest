@@ -70,6 +70,7 @@ if ($config) {
         prompt       => $context_content . $prompt,
         raw_text     => $full_text,
         model_config => $callType eq 'autocomplete_text' ? $config->{autocomplete_model} : $config->{default_model},
+        feature      => $callType,
     );
 
     if ( $response->{success} ) {
