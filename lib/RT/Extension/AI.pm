@@ -226,6 +226,10 @@ Claude (Anthropic), URL: https://api.anthropic.com/v1/messages
 
 =back
 
+To add another provider, subclass L<RT::Extension::AI::Provider> and implement
+C<_process_request>, and optionally C<_usage> to report token counts. See that
+module's documentation for details.
+
 =head2 Models
 
 Some API providers have different models that are optimized for different tasks.
@@ -274,6 +278,32 @@ Before enabling these features in full production, test them with your provider
 and watch your token usage for both input and output. Confirm that your account's
 limits and budget can absorb the volume you expect. Refer to your AI provider's
 documentation for the details of their token limits, pricing, and policies.
+The log entry for each request, described in L</Logging>, includes the token
+counts reported by the provider.
+
+=head2 Logging
+
+Each request to the AI provider is logged with the provider, the model, the RT
+feature that made the request, the time it took, and the input and output
+token counts when the provider reports them. For example:
+
+    AI request succeeded: provider=Claude model=claude-sonnet-4-5
+      feature=summarize_ticket elapsed_ms=1843 input_tokens=2210 output_tokens=187
+
+The entry is a single line in the log; it is wrapped here for readability.
+
+Successful requests are logged at the C<info> level and failed requests at the
+C<warning> level, with the error returned by the provider. Use RT's normal
+logging settings, such as C<$LogToFile> and C<$LogToSyslog>, to choose which
+levels are recorded.
+
+The feature is one of C<summarize_ticket>, C<assess_sentiment>,
+C<generate_ticketsql>, C<queue_creation_assistant>, or the name of the editor
+feature, such as C<adjust_tone> or C<suggest_response>. The Queue Creation
+Assistant retries failed requests, and each attempt is logged separately.
+
+Prompts, ticket content, responses from the provider, and request headers,
+which contain the API key, are not logged.
 
 =head2 Prompts
 
