@@ -396,6 +396,8 @@ and the value is saved in the "Ticket Summary" custom field on the ticket.
 
 Content from the ticket is sent to the AI provider and a concise summary is
 requested. The result is saved in the "Ticket Sentiment" custom field on the ticket.
+The log records the length of the summary at the C<info> level; the summary
+text itself is logged only at the C<debug> level.
 
 =back
 

@@ -53,7 +53,9 @@ sub Commit {
     }
 
     my $summary = $response->{result};
-    RT->Logger->info("Generated summary for ticket #$ticket_id: $summary");
+    RT->Logger->info( "Generated summary for ticket #$ticket_id ("
+            . length($summary) . " characters)" );
+    RT->Logger->debug("Summary for ticket #$ticket_id: $summary");
 
     $ticket->AddCustomFieldValue(
         Field => 'Ticket Summary',
