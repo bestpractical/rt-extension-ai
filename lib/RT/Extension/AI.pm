@@ -353,12 +353,12 @@ any conditions to create scrips that make sense for your system.
 
 Content from the ticket is sent to the AI provider and analyzed to assess
 the sentiment of the end user. Responses are Satisfied, Dissatisfied, or Neutral
-and the value is saved in the "Ticket Summary" custom field on the ticket.
+and the value is saved in the "Ticket Sentiment" custom field on the ticket.
 
 =item Generate Ticket Summary
 
 Content from the ticket is sent to the AI provider and a concise summary is
-requested. The result is saved in the "Ticket Sentiment" custom field on the ticket.
+requested. The result is saved in the "Ticket Summary" custom field on the ticket.
 The log records the length of the summary at the C<info> level; the summary
 text itself is logged only at the C<debug> level.
 
