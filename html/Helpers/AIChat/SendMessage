@@ -64,6 +64,7 @@ for my $attempt ( 0 .. $max_retries ) {
         prompt       => $system_prompt,
         raw_text     => $raw_text,
         model_config => $model_config,
+        feature      => 'queue_creation_assistant',
     );
     last if $response->{success};
     RT->Logger->warning("AI chat attempt " . ($attempt + 1) . " failed: " . ($response->{error} || 'unknown'));
