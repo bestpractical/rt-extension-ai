@@ -56,6 +56,11 @@ sub _process_request {
     $request_payload->{temperature} = $model_config->{temperature}
         if defined $model_config->{temperature};
 
+    # Which thinking settings a model accepts varies by model and effort, so
+    # send one only when configured rather than choosing a default here.
+    $request_payload->{thinking} = $model_config->{thinking}
+        if ref $model_config->{thinking} eq 'HASH';
+
     my $response = $ua->post(
         $self->{api_url},
         Content      => encode_json($request_payload),

@@ -186,6 +186,21 @@ you set it explicitly, because the frontier models (Opus 4.7 and later) reject
 it. To pin a specific API version, add an C<anthropic_version> key to the
 provider configuration; it defaults to C<2023-06-01>.
 
+Newer models, such as Claude Haiku 5.5, can think before they answer, and the
+thinking counts against C<max_tokens>. With a small limit like the 20 tokens
+autocomplete uses, the model can run out of tokens before it writes any text,
+and no suggestion appears. Turn thinking off for autocomplete with a
+C<thinking> key, which is passed to the API as is:
+
+    autocomplete_model => {
+        name       => 'claude-haiku-5-5',
+        max_tokens => 20,
+        thinking   => { type => 'disabled' },
+    },
+
+Check the Anthropic documentation for the C<thinking> values each model
+accepts; some newer models reject C<disabled>.
+
 =head2 Global and Queue-specific Configuration
 
 The block of configuration defined for the "Default" key, as shown above, is used
