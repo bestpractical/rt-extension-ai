@@ -74,13 +74,18 @@ sub _process_request {
             };
         }
 
-        my $result = $content->{content}[0]{text};
+        # Models that think return thinking blocks before the text, so the
+        # first block is not necessarily the answer.
+        my $result = join '',
+            map { $_->{text} // '' }
+            grep { ref $_ eq 'HASH' && ( $_->{type} // '' ) eq 'text' }
+            @{ ref $content->{content} eq 'ARRAY' ? $content->{content} : [] };
         return {
             success => 0,
             error   => "No content in response",
             raw     => $content,
             }
-            unless defined $result;
+            unless length $result;
 
         return {
             success => 1,
